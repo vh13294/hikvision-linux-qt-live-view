@@ -84,10 +84,7 @@ with Qt5 tools and VS Code in the browser.
 docker compose up --build
 ```
 
-**Open:** `http://localhost:8080` — default password: `changeme`
-
-Change the password by editing the `PASSWORD` value in [docker-compose.yml](docker-compose.yml)
-before starting.
+**Open:** `http://localhost:8080` — no password required (port is bound to localhost only).
 
 ---
 

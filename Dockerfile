@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     sudo \
     file \
     lsb-release \
-    # Qt5 – modules used by QtClientDemo.pro: core gui opengl (+ widgets needed at link time)
+    # Qt5 – modules used by QtClientDemo.pro: core gui opengl widgets
     qt5-qmake \
     qtbase5-dev \
     qttools5-dev \
@@ -51,15 +51,7 @@ RUN useradd -m -u 1000 -s /bin/bash developer \
 USER developer
 WORKDIR /home/developer
 
-# code-server config (password can be overridden via PASSWORD env var at runtime)
-RUN mkdir -p ~/.config/code-server && printf '%s\n' \
-    'bind-addr: 0.0.0.0:8080' \
-    'auth: password' \
-    'password: ${PASSWORD:-changeme}' \
-    'cert: false' \
-    > ~/.config/code-server/config.yaml
-
 EXPOSE 8080
 
 # Start code-server pointing at the mounted SDK workspace
-CMD ["code-server", "--bind-addr", "0.0.0.0:8080", "/workspace/sdk"]
+CMD ["code-server", "--bind-addr", "0.0.0.0:8080", "--auth", "none", "/workspace/sdk"]

@@ -7,7 +7,7 @@ services:
     restart: unless-stopped
 
     ports:
-      - "8080:8080"         # Open http://localhost:8080 in your browser
+      - "127.0.0.1:8080:8080"   # Open http://localhost:8080 in your browser
 
     volumes:
       # Mount entire SDK as read-write so builds output into the same tree
@@ -16,9 +16,6 @@ services:
       - code-server-extensions:/home/developer/.local/share/code-server
 
     environment:
-      # ── code-server password (change this or override in .env) ──────────────
-      PASSWORD: changeme
-
       # ── Linker: finds bundled .so files (libhcnetsdk, libPlayCtrl, etc.)
       #    during `qmake && make` without needing -L flags in the .pro ─────────
       LIBRARY_PATH: /workspace/sdk/lib
