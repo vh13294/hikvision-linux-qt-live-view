@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem -Path \"c:\\\\Users\\\\huotv\\\\Downloads\\\\EN-HCNetSDKV6.1.9.4_build20220412_linux64\" -Force | Select-Object Name, @{n='Type';e={if\\($_.PSIsContainer\\){'Directory'}else{'File'}}} | Format-Table -AutoSize)"
+    ]
+  }
+}
