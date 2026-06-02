@@ -16,7 +16,7 @@ CHardDiskParams::CHardDiskParams(QWidget *parent)
 		m_pCheckChan[i] = NULL;//释放由Qtable去完成
 	}
 
-	ui.tableHDGroup->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+	ui.tableHDGroup->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 
 	connect(ui.comboDGroup, SIGNAL(activated(int)), this, SLOT(comboHDGroupChanged(int)));
 }

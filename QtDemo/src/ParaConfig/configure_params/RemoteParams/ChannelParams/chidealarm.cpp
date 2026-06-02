@@ -11,7 +11,7 @@ CHideAlarm::CHideAlarm(QWidget *parent)
 	m_pstruHideAlarm = NULL;
 	m_iAlarmOutNum = 0;
 
-	ui.tableAlarmOut->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+	ui.tableAlarmOut->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ui.tableAlarmOut->setColumnCount(1);
     ui.tableAlarmOut->setEnabled(FALSE);
 

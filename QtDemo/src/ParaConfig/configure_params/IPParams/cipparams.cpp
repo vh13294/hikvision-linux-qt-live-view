@@ -75,7 +75,7 @@ int CIPParams::getIPInfo()
     ui.tableChannelInfo->setHorizontalHeaderLabels(list);
 
     //设置尺寸自适应
-    ui.tableChannelInfo->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    ui.tableChannelInfo->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ui.tableChannelInfo->setSelectionBehavior(QAbstractItemView::SelectRows);   //设置整行选中
     //ui.tableChannelInfo->setSelectionMode(QAbstractItemView::SingleSelection);  //设置当行选中
 

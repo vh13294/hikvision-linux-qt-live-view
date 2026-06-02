@@ -1,12 +1,12 @@
 /*
  * Copyright(C) 2010,Hikvision Digital Technology Co., Ltd 
  * 
- * ÎÄ¼þÃû³Æ£ºmain.cpp
- * Ãè    Êö£º
- * µ±Ç°°æ±¾£º1.0
- * ×÷    Õß£ºÍõ¹«ÆÍ
- * ´´½¨ÈÕÆÚ£º2009Äê11ÔÂ12ÈÕ
- * ÐÞ¸Ä¼ÇÂ¼£º
+ * ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½Æ£ï¿½main.cpp
+ * ï¿½ï¿½    ï¿½ï¿½ï¿½ï¿½
+ * ï¿½ï¿½Ç°ï¿½æ±¾ï¿½ï¿½1.0
+ * ï¿½ï¿½    ï¿½ß£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú£ï¿½2009ï¿½ï¿½11ï¿½ï¿½12ï¿½ï¿½
+ * ï¿½Þ¸Ä¼ï¿½Â¼ï¿½ï¿½
  */
 
 #include "qtclientdemo.h"
@@ -15,23 +15,21 @@
 #include <QApplication>
 
 
-//Ö÷´°¿Ú
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 QtClientDemo* gqtclinetdemo;
 
 /*******************************************************************
       Function:   main
-   Description:   Ö÷º¯ÊýÈë¿Ú
+   Description:   ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
      Parameter:   (IN)   int argc  
                   (IN)   char *argv[]  
-        Return:   0--³É¹¦£¬-1--Ê§°Ü¡£   
+        Return:   0--ï¿½É¹ï¿½ï¿½ï¿½-1--Ê§ï¿½Ü¡ï¿½   
 **********************************************************************/
 int main(int argc, char *argv[])
 {
 	gqtclinetdemo = NULL;   
     QApplication a(argc, argv);
-	QTextCodec::setCodecForTr(QTextCodec::codecForName("GB2312"));
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("GB2312"));
-    QTextCodec::setCodecForCStrings(QTextCodec::codecForName("GB2312"));
 
     //Add translation file.
     QTranslator translator;

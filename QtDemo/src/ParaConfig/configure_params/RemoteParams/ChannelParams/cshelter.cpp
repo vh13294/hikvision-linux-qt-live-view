@@ -30,7 +30,7 @@ CShelter::CShelter(QWidget *parent)
 
 	ui.tableShelter->setRowCount(MAX_SHELTERNUM);
 	ui.tableShelter->setColumnCount(4);
-	ui.tableShelter->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+	ui.tableShelter->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 	ui.tableShelter->setHorizontalHeaderLabels(list);
 
 	m_pShelter =NULL;

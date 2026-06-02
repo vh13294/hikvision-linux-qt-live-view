@@ -17,8 +17,8 @@ CAlarmInHandleType::CAlarmInHandleType(QWidget *parent)
     : QDialog(parent)
 {
 	ui.setupUi(this);
-	ui.tableChannel->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
-	ui.tableAlarmOut->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+	ui.tableChannel->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+	ui.tableAlarmOut->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 
 	m_lUserID = -1;
 	m_pAlarmInInfo = NULL; //外部传入，外部释放

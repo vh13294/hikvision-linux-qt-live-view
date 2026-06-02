@@ -43,7 +43,7 @@ CAdvancedNetParams::CAdvancedNetParams(QWidget *parent)
     m_ui->tabWEmail->setRowCount(3);
 
     //set the size of the table
-    m_ui->tabWEmail->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    m_ui->tabWEmail->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 
     strings.clear();
     strings<<"receiver name"<<"Email";

@@ -45,9 +45,9 @@ CUserParams::CUserParams(QWidget *parent)
 	strings<<"User29"<<"User30"<<"User31";
 	ui.comboUserNo->addItems(strings);
 
-	ui.tableLocalChannel->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+	ui.tableLocalChannel->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 	ui.tableLocalChannel->setColumnCount(1);
-	ui.tableRemoteChannel->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+	ui.tableRemoteChannel->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 	ui.tableRemoteChannel->setColumnCount(1);
 
 	connect(ui.comboUserNo, SIGNAL(activated(int)), this, SLOT( userIDChanged(int )));

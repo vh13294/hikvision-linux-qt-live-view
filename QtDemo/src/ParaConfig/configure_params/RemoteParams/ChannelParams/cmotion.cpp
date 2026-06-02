@@ -42,8 +42,8 @@ CMotion::CMotion(QWidget *parent)
 		m_pcheckAlarmOut[i] = NULL;
 	}
 
-	ui.tableChannel->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
-	ui.tableAlarmOut->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+	ui.tableChannel->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+	ui.tableAlarmOut->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 
 	m_pstruMotion = NULL;
 	m_iAlarmOutNum = 0;
