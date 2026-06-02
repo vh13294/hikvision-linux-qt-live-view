@@ -79,23 +79,16 @@ For building and editing the source on any host OS (Windows, macOS, Linux),
 use the included Docker setup. It provides a full Debian 12 build environment
 with Qt5 tools and VS Code in the browser.
 
-**1. Match container user to host user (fixes volume write permissions):**
+**Start:**
 ```bash
-printf "UID=%s\nGID=%s\n" "$(id -u)" "$(id -g)" > .env
-```
-The `developer` user inside the container is created with the same UID/GID as the host user,
-so files on both sides of the mounted volume share the same ownership.
-For Proxmox LXC running as root, `.env` will contain:
-```
-UID=0
-GID=0
-```
-
-**2. Start:**
-```bash
-DOCKER_BUILDKIT=0 docker compose up build
+DOCKER_BUILDKIT=0 docker compose build
 DOCKER_BUILDKIT=0 docker compose up -d
 ```
+
+The container uses the LinuxServer.io PUID/PGID pattern: the entrypoint runs as root,
+calls `usermod`/`groupmod` to remap the `developer` user to the configured IDs, then
+drops privileges before starting code-server. Edit `PUID`/`PGID` in `docker-compose.yml`
+to match your host user (`id -u` / `id -g`). The default is `0`/`0` (root) for Proxmox LXC.
 
 **Open:** `http://localhost:9015` — no password required (port is bound to `0.0.0.0`, reachable from any device on the same network).
 

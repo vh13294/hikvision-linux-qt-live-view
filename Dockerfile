@@ -1,8 +1,5 @@
 FROM debian:bookworm-slim
 
-ARG UID=1000
-ARG GID=1000
-
 ENV DEBIAN_FRONTEND=noninteractive
 
 # ── Build tools + Qt5 + all SDK runtime/compile-time dependencies ─────────────
@@ -19,6 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     sudo \
     file \
     lsb-release \
+    gosu \
     # Qt5 – modules used by QtClientDemo.pro: core gui opengl widgets
     qt5-qmake \
     qtbase5-dev \
@@ -52,15 +50,16 @@ RUN curl -fsSL https://code-server.dev/install.sh | sh \
     && ln -sf "$CS_BIN" /usr/local/bin/code-server \
     && /usr/local/bin/code-server --version
 
-# ── Non-root developer user ────────────────────────────────────────────────────
-RUN groupadd -g ${GID} developer \
-    && useradd -m -u ${UID} -g ${GID} -s /bin/bash developer \
+# ── Non-root developer user (UID/GID adjusted at runtime via PUID/PGID) ───────
+RUN useradd -m -u 1000 -s /bin/bash developer \
     && echo "developer ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-USER developer
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 WORKDIR /home/developer
 
 EXPOSE 8080
 
-# Start code-server pointing at the mounted SDK workspace
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["code-server", "--bind-addr", "0.0.0.0:8080", "--auth", "none", "/workspace/sdk"]

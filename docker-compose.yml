@@ -3,9 +3,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        UID: "${UID:-1000}"
-        GID: "${GID:-1000}"
     container_name: hikvision-dev
     restart: unless-stopped
 
@@ -19,6 +16,10 @@ services:
       - code-server-extensions:/home/developer/.local/share/code-server
 
     environment:
+      # ── Runtime user mapping (same pattern as LinuxServer.io images) ──────────
+      PUID: 0
+      PGID: 0
+
       # ── Linker: finds bundled .so files (libhcnetsdk, libPlayCtrl, etc.)
       #    during `qmake && make` without needing -L flags in the .pro ─────────
       LIBRARY_PATH: /workspace/sdk/lib
