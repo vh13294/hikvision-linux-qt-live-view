@@ -81,8 +81,7 @@ with Qt5 tools and VS Code in the browser.
 
 **1. Match container user to host user (fixes volume write permissions):**
 ```bash
-echo "UID=$(id -u)" >  .env
-echo "GID=$(id -g)" >> .env
+printf "UID=%s\nGID=%s\n" "$(id -u)" "$(id -g)" > .env
 ```
 The `developer` user inside the container is created with the same UID/GID as the host user,
 so files on both sides of the mounted volume share the same ownership.
@@ -94,8 +93,8 @@ GID=0
 
 **2. Start:**
 ```bash
-DOCKER_BUILDKIT=0 UID=0 GID=0 docker compose build
-DOCKER_BUILDKIT=0 UID=0 GID=0 docker compose up -d
+DOCKER_BUILDKIT=0 docker compose up build
+DOCKER_BUILDKIT=0 docker compose up -d
 ```
 
 **Open:** `http://localhost:9015` — no password required (port is bound to `0.0.0.0`, reachable from any device on the same network).
