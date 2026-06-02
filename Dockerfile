@@ -1,5 +1,8 @@
 FROM debian:bookworm-slim
 
+ARG UID=1000
+ARG GID=1000
+
 ENV DEBIAN_FRONTEND=noninteractive
 
 # ── Build tools + Qt5 + all SDK runtime/compile-time dependencies ─────────────
@@ -50,7 +53,8 @@ RUN curl -fsSL https://code-server.dev/install.sh | sh \
     && /usr/local/bin/code-server --version
 
 # ── Non-root developer user ────────────────────────────────────────────────────
-RUN useradd -m -u 1000 -s /bin/bash developer \
+RUN groupadd -g ${GID} developer \
+    && useradd -m -u ${UID} -g ${GID} -s /bin/bash developer \
     && echo "developer ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 USER developer

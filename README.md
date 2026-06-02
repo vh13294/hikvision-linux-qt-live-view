@@ -79,24 +79,32 @@ For building and editing the source on any host OS (Windows, macOS, Linux),
 use the included Docker setup. It provides a full Debian 12 build environment
 with Qt5 tools and VS Code in the browser.
 
-**Start:**
+**1. Match container user to host user (fixes volume write permissions):**
 ```bash
-docker compose up --build
+echo "UID=$(id -u)" >  .env
+echo "GID=$(id -g)" >> .env
+```
+The `developer` user inside the container is created with the same UID/GID as the host user,
+so files on both sides of the mounted volume share the same ownership.
+For Proxmox LXC running as root, `.env` will contain:
+```
+UID=0
+GID=0
 ```
 
-> **Proxmox LXC / memory-constrained hosts:** if the build completes but fails at the very end with
-> `failed to solve: Internal: open /proc/stat: transport endpoint is not connected`, disable BuildKit:
-> ```bash
-> DOCKER_BUILDKIT=0 docker compose up --build
-> ```
-> **Why it works:** BuildKit runs as a separate daemon that reads `/proc/stat` to report resource usage
-> after exporting layers. On Proxmox LXC, the daemon can be OOM-killed mid-export (this image is large —
-> Qt5 + build tools + code-server), which severs the gRPC connection between the Docker CLI and the
-> BuildKit daemon. The resulting disconnect surfaces as `transport endpoint is not connected` on the
-> `/proc/stat` read. Disabling BuildKit (`DOCKER_BUILDKIT=0`) falls back to the classic Docker builder,
-> which runs in-process and has no separate daemon to lose connection to.
+**2. Start:**
+```bash
+DOCKER_BUILDKIT=0 UID=0 GID=0 docker compose build
+DOCKER_BUILDKIT=0 UID=0 GID=0 docker compose up -d
+```
 
-**Open:** `http://localhost:9015` — no password required (port is bound to localhost only).
+**Open:** `http://localhost:9015` — no password required (port is bound to `0.0.0.0`, reachable from any device on the same network).
+
+> **Why `DOCKER_BUILDKIT=0`:** BuildKit runs as a separate daemon that reads `/proc/stat` to report
+> resource usage after exporting layers. On Proxmox LXC it can be OOM-killed mid-export (this image is
+> large — Qt5 + build tools + code-server), severing the gRPC connection between the Docker CLI and the
+> BuildKit daemon, which surfaces as `transport endpoint is not connected`. Disabling BuildKit falls back
+> to the classic in-process builder which has no separate daemon to lose connection to.
 
 ---
 
