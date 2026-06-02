@@ -17,7 +17,7 @@ fi
 
 # Build outputs go under ~/build/ so the developer user can always write there,
 # regardless of the ownership of the mounted /workspace/sdk volume.
-BUILD_BASE=${BUILD_BASE:-$HOME/build}
+BUILD_BASE=${BUILD_BASE:-$SDK/build}
 
 # ── Console demo ───────────────────────────────────────────────────────────────
 build_console() {

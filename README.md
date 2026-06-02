@@ -106,20 +106,38 @@ Run inside the code-server terminal (or any Linux shell with the dependencies in
 
 ```bash
 # Build everything
-bash /workspace/sdk/build-demos.sh all
+bash build-demos.sh all
 
 # Qt GUI demo only
-bash /workspace/sdk/build-demos.sh qt
+bash build-demos.sh qt
 
 # Console demo only
-bash /workspace/sdk/build-demos.sh console
+bash build-demos.sh console
 ```
 
 | Demo | Output binary | GUI |
 |---|---|---|
-| QtDemo | `~/build/qt/QtClientDemo` | Qt5 |
-| consoleDemo | `~/build/console/lib/sdkTest` | None (CLI) |
+| QtDemo | `build/qt/QtClientDemo` | Qt5 |
+| consoleDemo | `build/console/lib/sdkTest` | None (CLI) |
 | LinuxJavaDemo | built via `ant build` | Java Swing |
+
+---
+
+## Running the Qt Demo
+
+Build the binary (see above), then copy `build/qt/QtClientDemo` and the `lib/` folder to your
+Debian 11 machine. Install the runtime dependencies:
+
+```bash
+sudo apt install libqt5widgets5 libqt5opengl5 libsdl2-2.0-0 libopenal1
+```
+
+Run from the directory containing `lib/`:
+
+```bash
+export LD_LIBRARY_PATH=./lib:./lib/HCNetSDKCom:$LD_LIBRARY_PATH
+./QtClientDemo
+```
 
 ---
 
