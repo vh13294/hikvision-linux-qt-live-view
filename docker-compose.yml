@@ -7,7 +7,7 @@ services:
     restart: unless-stopped
 
     ports:
-      - "127.0.0.1:9015:8080"   # Open http://localhost:9015 in your browser
+      - "0.0.0.0:9015:8080"   # Open http://<host-ip>:9015 in your browser
 
     volumes:
       # Mount entire SDK as read-write so builds output into the same tree
