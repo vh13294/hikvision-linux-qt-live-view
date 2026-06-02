@@ -1044,7 +1044,7 @@ void RealPlay::on_pushButton_realplay_clicked()
         m_rpstartstopflag = 0;
         //��ʾΪ�����ַ�
         ui.pushButton_realplay->setText( QApplication::translate("TranslateClass", 
-            "play", 0, QApplication::UnicodeUTF8));
+            "play", 0));
 		ui.comboBox_windowsnum->setDisabled(0);
     }
 
@@ -1091,8 +1091,7 @@ void RealPlay::on_pushButton_savefile_clicked()
 		{
 	    	m_rpsavestopflag =1;
 	        ui.pushButton_savefile->setText(QApplication::translate("RealPlayClass", 
-	        	"stop record", 0,
-	        QApplication::UnicodeUTF8));
+	        	"stop record", 0));
 
 		}
 
@@ -1108,7 +1107,7 @@ void RealPlay::on_pushButton_savefile_clicked()
 		{
 			m_rpsavestopflag = 0;
        		ui.pushButton_savefile->setText(QApplication::translate("RealPlayClass", 
-           		"record", 0, QApplication::UnicodeUTF8));   
+           		"record", 0));   
 		}
     
     }

@@ -2,7 +2,18 @@
   "permissions": {
     "allow": [
       "PowerShell(Get-ChildItem -Path \"c:\\\\Users\\\\huotv\\\\Downloads\\\\EN-HCNetSDKV6.1.9.4_build20220412_linux64\" -Force | Select-Object Name, @{n='Type';e={if\\($_.PSIsContainer\\){'Directory'}else{'File'}}} | Format-Table -AutoSize)",
-      "Bash(xargs grep -l '#include <QtGui/Q')"
+      "Bash(xargs grep -l '#include <QtGui/Q')",
+      "Bash(xxd)",
+      "Bash(python3 -c ' *)",
+      "Bash(python -c ' *)",
+      "Bash(perl -e 'print \"perl works\\\\n\"')",
+      "Bash(perl --version)",
+      "Bash(perl -0777 -pe 's/,\\\\n\\\\s*QApplication::UnicodeUTF8//g')",
+      "Bash(perl -0777 -i -pe 's/,\\\\n\\\\s*QApplication::UnicodeUTF8//g' c:/Users/huotv/Downloads/EN-HCNetSDKV6.1.9.4_build20220412_linux64/QtDemo/src/PlayBack/playback.cpp c:/Users/huotv/Downloads/EN-HCNetSDKV6.1.9.4_build20220412_linux64/QtDemo/src/RealPlay/realplay.cpp)",
+      "Bash(perl -0777 -i -pe 's/,[ \\\\t]*\\\\\\\\?[ \\\\t]*\\\\n\\\\s*QApplication::UnicodeUTF8\\\\b//g' c:/Users/huotv/Downloads/EN-HCNetSDKV6.1.9.4_build20220412_linux64/QtDemo/src/PlayBack/playback.cpp)",
+      "Bash(perl -0777 -pe 's/,[ \\\\t]*\\\\\\\\?[ \\\\t]*\\\\n\\\\s*QApplication::UnicodeUTF8\\\\b//g')",
+      "Bash(perl -0777 -pe 's/,\\\\s*QApplication::UnicodeUTF8//g')",
+      "Bash(perl -0777 -i -pe 's/,\\\\s*QApplication::UnicodeUTF8//g' c:/Users/huotv/Downloads/EN-HCNetSDKV6.1.9.4_build20220412_linux64/QtDemo/src/PlayBack/playback.cpp c:/Users/huotv/Downloads/EN-HCNetSDKV6.1.9.4_build20220412_linux64/QtDemo/src/RealPlay/realplay.cpp c:/Users/huotv/Downloads/EN-HCNetSDKV6.1.9.4_build20220412_linux64/QtDemo/src/qtclientdemo.cpp)"
     ]
   }
 }

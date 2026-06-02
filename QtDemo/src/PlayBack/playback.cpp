@@ -77,15 +77,15 @@ PlayBack::PlayBack( QList<DeviceData> * tree, int * usrid,
     ui.tabWidget->setTabText(ui.tabWidget->indexOf(ui.tab), 
     	QApplication::translate("PlayBackClass", 
        	"remote file", 
-        0, QApplication::UnicodeUTF8));
+        0));
     ui.tabWidget->setTabText(ui.tabWidget->indexOf(ui.tab_2),
      	QApplication::translate("PlayBackClass", 
       	"local file", 
-       	0, QApplication::UnicodeUTF8));
+       	0));
 	ui.tabWidget->setTabText(ui.tabWidget->indexOf(ui.tab_3), 
        	QApplication::translate("PlayBackClass", 
      	"playback by time", 
-       	0, QApplication::UnicodeUTF8));	
+       	0));	
 	
 	//the begin page is remote page
 	ui.tabWidget->setCurrentIndex(0);
@@ -442,13 +442,13 @@ void PlayBack::prepareDownload(int row,int column)
 	{
 		m_pblockflag =1;
         ui.pushButton_1_lock->setText( QApplication::translate("TranslateClass", 
-            "unlock", 0, QApplication::UnicodeUTF8));
+            "unlock", 0));
 	}
 	else
 	{
 		m_pblockflag =0;
         ui.pushButton_1_lock->setText( QApplication::translate("TranslateClass", 
-            "lock", 0, QApplication::UnicodeUTF8));
+            "lock", 0));
 	}
     ui.lineEdit_1_filetotalsize->setText(ui.tableWidget_1_filelist->item(row,
 										column + 1 )->text());
@@ -880,7 +880,7 @@ void PlayBack::on_pushButton_1_download_clicked()
 		m_pbdownloading =1;
 		ui.pushButton_1_download->setText(QApplication::translate("translateClass", 
         	"stop download", 
-        	0, QApplication::UnicodeUTF8));
+        	0));
 		//have not realise download process
 		DWORD processs =0;
 		while(1)
@@ -895,7 +895,7 @@ void PlayBack::on_pushButton_1_download_clicked()
 				QMessageBox::information(this,tr("GetFileByName succ"),tr("download finish"));
 				m_pbdownloading =0;
 				ui.pushButton_1_download->setText(QApplication::translate("translateClass",
-        			"download", 0, QApplication::UnicodeUTF8));
+        			"download", 0));
 			
 				break;
 			}
@@ -912,7 +912,7 @@ void PlayBack::on_pushButton_1_download_clicked()
 	    }
 		m_pbdownloading =0;
 		ui.pushButton_1_download->setText(QApplication::translate("translateClass",
-        	"download", 0, QApplication::UnicodeUTF8));
+        	"download", 0));
 	}
     return;
 }
@@ -940,7 +940,7 @@ void PlayBack::on_pushButton_1_lock_clicked()
         }
         m_pblockflag =1;
         ui.pushButton_1_lock->setText( QApplication::translate("TranslateClass", 
-            "unlock", 0, QApplication::UnicodeUTF8));
+            "unlock", 0));
     }
     else
     {
@@ -952,7 +952,7 @@ void PlayBack::on_pushButton_1_lock_clicked()
         }
         m_pblockflag =0;
         ui.pushButton_1_lock->setText( QApplication::translate("TranslateClass", 
-            "lock", 0, QApplication::UnicodeUTF8));
+            "lock", 0));
     }
 }
 
@@ -1042,8 +1042,7 @@ void PlayBack::on_pushButton_playback_start_1_clicked()
         ui.pushButton_playback_frame_1->setDisabled(0);
         ui.pushButton_playback_volume_1->setDisabled(0);
         ui.pushButton_playback_start_1->setText(QApplication::translate(
-            "PlayBackClass", "pause", 0,
-            QApplication::UnicodeUTF8));
+            "PlayBackClass", "pause", 0));
 		ui.horizontalSlider_1_playbackprocess->setRange(0,100);
 		ui.horizontalSlider_playback_volume_1->setRange(0,10);
 		m_pbqtimer= new QTimer;   
@@ -1068,8 +1067,7 @@ void PlayBack::on_pushButton_playback_start_1_clicked()
         ui.pushButton_playback_frame_1->setDisabled(1);
         ui.pushButton_playback_volume_1->setDisabled(1);
         ui.pushButton_playback_start_1->setText(QApplication::translate(
-            "PlayBackClass", "play", 0, 
-            QApplication::UnicodeUTF8));
+            "PlayBackClass", "play", 0));
         m_pbcontrollabel_1 = 2;
         //NET_DVR_SetPlayDataCallBack(m_pbhandle, PlaybackCallBack, 9);
     }
@@ -1090,8 +1088,7 @@ void PlayBack::on_pushButton_playback_start_1_clicked()
         ui.pushButton_playback_frame_1->setDisabled(0);
         ui.pushButton_playback_volume_1->setDisabled(0);
         ui.pushButton_playback_start_1->setText(QApplication::translate(\
-            "PlayBackClass", "pause", 0, \
-            QApplication::UnicodeUTF8));
+            "PlayBackClass", "pause", 0));
         m_pbcontrollabel_1 = 1;
         //NET_DVR_SetPlayDataCallBack(m_pbhandle, PlaybackCallBack, 9);
     }
@@ -1120,7 +1117,7 @@ void PlayBack::on_pushButton_playback_stop_1_clicked()
     ui.pushButton_playback_volume_1->setDisabled(1);
     ui.pushButton_playback_start_1->setText(QApplication::translate(\
         "PlayBackClass", "pause", \
-        0, QApplication::UnicodeUTF8));
+        0));
 	if (m_pbqtimer != NULL)
 	{
 		delete m_pbqtimer;
@@ -1173,8 +1170,7 @@ void PlayBack::on_pushButton_playback_volume_1_clicked()
 		m_pbvolumeflag = 1;
 		ui.pushButton_playback_volume_1->setText(\
 			QApplication::translate("translateClass", 
-			"open volume", 0, 
-			QApplication::UnicodeUTF8));
+			"open volume", 0));
 	}
 	else
 	{
@@ -1182,8 +1178,7 @@ void PlayBack::on_pushButton_playback_volume_1_clicked()
 		m_pbvolumeflag = 0;
 		ui.pushButton_playback_volume_1->setText(\
 			QApplication::translate("translateClass", 
-			"close volume", 0, 
-			QApplication::UnicodeUTF8));
+			"close volume", 0));
 	}
 	return ;
 }
@@ -1695,8 +1690,7 @@ void PlayBack::on_pushButton_playback_volume_2_clicked()
 		m_pbvolumeflag = 1;
 		ui.pushButton_playback_volume_2->setText(\
 			QApplication::translate("translateClass", 
-			"close volume", 0, 
-			QApplication::UnicodeUTF8));
+			"close volume", 0));
 	}
 	else
 	{
@@ -1704,8 +1698,7 @@ void PlayBack::on_pushButton_playback_volume_2_clicked()
 		m_pbvolumeflag = 0;
 		ui.pushButton_playback_volume_2->setText(\
 			QApplication::translate("translateClass", 
-			"open volume", 0, 
-			QApplication::UnicodeUTF8));
+			"open volume", 0));
 	}
 	return ;
 
@@ -1953,7 +1946,7 @@ void PlayBack::on_pushButton_3_download_clicked()
 		m_pbdownloading =1;
 		ui.pushButton_3_download->setText(QApplication::translate("translateClass",
         	"\345\201\234\346\255\242\344\270\213\350\275\275", 
-        	0, QApplication::UnicodeUTF8));
+        	0));
 		//have not realize the downloading processing slider
 	}
 	else
@@ -1966,7 +1959,7 @@ void PlayBack::on_pushButton_3_download_clicked()
 		}
 		m_pbdownloading =0;
 		ui.pushButton_3_download->setText(QApplication::translate("translateClass",
-        	"\344\270\213\350\275\275", 0, QApplication::UnicodeUTF8));
+        	"\344\270\213\350\275\275", 0));
 
 	}
 	return;
@@ -2006,7 +1999,7 @@ void PlayBack::on_pushButton_3_save_clicked()
 		}
 		m_pbsaving = 1;
 		ui.pushButton_3_save->setText(QApplication::translate("translateClass", 
-			"\345\201\234\346\255\242\344\277\235\345\255\230", 0, QApplication::UnicodeUTF8));
+			"\345\201\234\346\255\242\344\277\235\345\255\230", 0));
 	}
 	else
 	{
@@ -2020,7 +2013,7 @@ void PlayBack::on_pushButton_3_save_clicked()
 				tr("NET_DVR_StopPlayBackSave succ"));
 		m_pbsaving = 0;
 		ui.pushButton_3_save->setText(QApplication::translate("translateClass", 
-				"\344\277\235\345\255\230", 0, QApplication::UnicodeUTF8));
+				"\344\277\235\345\255\230", 0));
 	}
 	return;
 }
@@ -2128,8 +2121,7 @@ void PlayBack::on_pushButton_playback_start_3_clicked()
         ui.pushButton_playback_volume_3->setDisabled(0);
         
         ui.pushButton_playback_start_3->setText(QApplication::translate(
-            "PlayBackClass", "pause", 0, 
-            QApplication::UnicodeUTF8));
+            "PlayBackClass", "pause", 0));
         m_pbcontrollabel_3 = 1;
         //NET_DVR_SetPlayDataCallBack(m_pbhandle, PlaybackCallBack, 9);
     }
@@ -2156,8 +2148,7 @@ void PlayBack::on_pushButton_playback_start_3_clicked()
         ui.pushButton_playback_frame_3->setDisabled(1);
         ui.pushButton_playback_volume_3->setDisabled(1);
         ui.pushButton_playback_start_3->setText(QApplication::translate(
-            "PlayBackClass", "play", 0, 
-            QApplication::UnicodeUTF8));
+            "PlayBackClass", "play", 0));
         m_pbcontrollabel_3 = 2;
         //NET_DVR_SetPlayDataCallBack(m_pbhandle, PlaybackCallBack, 9);
     }
@@ -2178,8 +2169,7 @@ void PlayBack::on_pushButton_playback_start_3_clicked()
         ui.pushButton_playback_frame_3->setDisabled(0);
         ui.pushButton_playback_volume_3->setDisabled(0);
         ui.pushButton_playback_start_3->setText(QApplication::translate(
-            "PlayBackClass", "pause", 0, 
-            QApplication::UnicodeUTF8));
+            "PlayBackClass", "pause", 0));
         m_pbcontrollabel_3 = 1;
         //NET_DVR_SetPlayDataCallBack(m_pbhandle, PlaybackCallBack, 9);
     }
@@ -2207,7 +2197,7 @@ void PlayBack::on_pushButton_playback_stop_3_clicked()
     ui.pushButton_playback_volume_3->setDisabled(1);
     ui.pushButton_playback_start_3->setText(QApplication::translate(
         "PlayBackClass", "play", 
-        0, QApplication::UnicodeUTF8)); 
+        0)); 
 	m_pbcontrollabel_3=0;
     return;
 
@@ -2317,8 +2307,7 @@ void PlayBack::on_pushButton_playback_volume_3_clicked()
 		m_pbvolumeflag = 1;
 		ui.pushButton_playback_volume_3->setText(\
 			QApplication::translate("translateClass", 
-			"close volume", 0, 
-			QApplication::UnicodeUTF8));
+			"close volume", 0));
 	}
 	else
 	{
@@ -2326,8 +2315,7 @@ void PlayBack::on_pushButton_playback_volume_3_clicked()
 		m_pbvolumeflag = 0;
 		ui.pushButton_playback_volume_3->setText(\
 			QApplication::translate("translateClass", 
-			"open volume", 0, 
-			QApplication::UnicodeUTF8));
+			"open volume", 0));
 	}
 	return ;
 }

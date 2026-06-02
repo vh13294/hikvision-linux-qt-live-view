@@ -1107,19 +1107,19 @@ void QtClientDemo::showTreeContextMenu(const QPoint &pos)
         QAction *loginAction = m_qtreemenu->addAction(\
             QApplication::translate("translateClass", 
 			"login", \
-            0, QApplication::UnicodeUTF8));
+            0));
         QAction *logoutAction = m_qtreemenu->addAction(\
             QApplication::translate("translateClass", 
 			"logout", \
-            0, QApplication::UnicodeUTF8));
+            0));
         QAction *exitAction = m_qtreemenu->addAction(\
             QApplication::translate("translateClass", 
 			"delete", \
-            0, QApplication::UnicodeUTF8));
+            0));
         QAction *attrAction = m_qtreemenu->addAction(\
             QApplication::translate("translateClass", 
 			"property", \
-            0, QApplication::UnicodeUTF8));
+            0));
         
         connect(loginAction, SIGNAL(triggered(bool)), this, SLOT(loginDevice()));
         connect(logoutAction, SIGNAL(triggered(bool)), this, SLOT(logoutDevice()));
@@ -1133,11 +1133,11 @@ void QtClientDemo::showTreeContextMenu(const QPoint &pos)
         QAction *JPEGAction = m_qtreemenu->addAction(\
             QApplication::translate("translateClass", 
 			"\346\212\223\345\233\276", \
-            0, QApplication::UnicodeUTF8));
+            0));
         QAction *attrAction =m_qtreemenu->addAction(\
             QApplication::translate("translateClass", 
 			"\345\261\236\346\200\247", \
-            0, QApplication::UnicodeUTF8));
+            0));
         connect(JPEGAction, SIGNAL(triggered(bool)), this, SLOT(getJPEGpic()));
         connect(attrAction, SIGNAL(triggered(bool)), this, SLOT(showChannAttrDial()));
 
@@ -2207,34 +2207,34 @@ void QtClientDemo::on_Manage_pushButton_clicked()
     QAction *timingAction = m_qmenumanage->addAction(\
             QApplication::translate("translateClass", 
 			"check time", \
-            0, QApplication::UnicodeUTF8));
+            0));
     QAction *updateAction = m_qmenumanage->addAction(\
             QApplication::translate("translateClass", 
 			"upgrade", \
-            0, QApplication::UnicodeUTF8));
+            0));
     QAction *formatAction = m_qmenumanage->addAction(\
             QApplication::translate("translateClass", 
 			"format", \
-            0, QApplication::UnicodeUTF8));
+            0));
     QAction *rebootAction = m_qmenumanage->addAction(\
             QApplication::translate("translateClass", 
 			"restart", \
-            0, QApplication::UnicodeUTF8));
+            0));
     QAction *shutdownAction = m_qmenumanage->addAction(\
             QApplication::translate("translateClass", 
 			"shut down", \
-            0, QApplication::UnicodeUTF8));
+            0));
     QAction *logSearchAction = m_qmenumanage->addAction(\
             QApplication::translate("translateClass", 
             "query log", \
-            0, QApplication::UnicodeUTF8));
+            0));
     QAction *deviceStateAction = m_qmenumanage->addAction(\
             QApplication::translate("translateClass", 
             "device state", \
-            0, QApplication::UnicodeUTF8));
+            0));
     QAction *defaultConfigAction = m_qmenumanage->addAction(\
             QApplication::translate("translateClass", "restore default", \
-            0, QApplication::UnicodeUTF8));
+            0));
     connect(timingAction, SIGNAL(triggered(bool)), this, 
 	SLOT(timingDevice()));
     connect(updateAction, SIGNAL(triggered(bool)), this, 
@@ -2402,37 +2402,37 @@ void QtClientDemo::on_Other_pushButton_clicked()
     QAction *deploymentAction = m_qmenuother->addAction(\
             QApplication::translate("translateClass", 
             "Guard/Unguard", \
-            0, QApplication::UnicodeUTF8));
+            0));
     QAction *manualSaveAction = m_qmenuother->addAction(\
             QApplication::translate("translateClass", 
             "Manual record", \
-            0, QApplication::UnicodeUTF8));
+            0));
     QAction *serialTransferAction = m_qmenuother->addAction(\
             QApplication::translate("translateClass", 
             "Serial port forward", \
-            0, QApplication::UnicodeUTF8));
+            0));
     QAction *devicePanelAction = m_qmenuother->addAction(\
             QApplication::translate("translateClass", 
             "Device panel", \
-            0, QApplication::UnicodeUTF8));
+            0));
     QAction *importConfigAction = m_qmenuother->addAction(\
             QApplication::translate("translateClass", 
             "Config file", \
-            0, QApplication::UnicodeUTF8));
+            0));
 /*
 	QAction *audioIntercomAction = m_qmenuother->addAction(\
             QApplication::translate("translateClass", 
             "\350\257\255\351\237\263\345\257\271\350\256\262", \
-            0, QApplication::UnicodeUTF8));
+            0));
     QAction *audioBroadcastAction = m_qmenuother->addAction(\
             QApplication::translate("translateClass", 
             "\350\257\255\351\237\263\345\271\277\346\222\255", \
-            0, QApplication::UnicodeUTF8));
+            0));
 */	
     QAction *audioTransferAction = m_qmenuother->addAction(\
             QApplication::translate("translateClass", 
             "Audio forward", \
-            0, QApplication::UnicodeUTF8));
+            0));
 
     connect(deploymentAction, SIGNAL(triggered(bool)), this, 
 		SLOT(deploymentOrNotDevice()));
