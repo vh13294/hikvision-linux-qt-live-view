@@ -5,7 +5,7 @@ UI_DIR  = obj/Gui
 MOC_DIR = obj/Moc
 OBJECTS_DIR = obj/Obj
 
-TARGET = ../lib/QtClientDemo
+TARGET = ../../../QtClientDemo
 QT +=	core \
 	gui \
 	opengl \

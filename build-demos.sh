@@ -28,13 +28,13 @@ build_console() {
 build_qt() {
     echo "=== Building QtClientDemo ==="
     cd "$SDK/QtDemo/Linux64/QtCreator"
-    mkdir -p obj/Gui obj/Moc obj/Obj ../lib
+    mkdir -p obj/Gui obj/Moc obj/Obj
     # -spec linux-g++ ensures Qt5 spec is used
     qmake -spec linux-g++ QtClientDemo.pro \
         QMAKE_LIBDIR+="$SDK/lib" \
         QMAKE_RPATHDIR+="$SDK/lib:$SDK/lib/HCNetSDKCom"
     make -j"$(nproc)"
-    echo "→ Output: $SDK/QtDemo/Linux64/lib/QtClientDemo"
+    echo "→ Output: $SDK/QtClientDemo"
 }
 
 case "$TARGET" in

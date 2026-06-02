@@ -61,7 +61,7 @@ The SDK ships its own copy in `lib/`, so you must tell the loader where to find 
 
 ```bash
 export LD_LIBRARY_PATH=/path/to/sdk/lib:/path/to/sdk/lib/HCNetSDKCom:$LD_LIBRARY_PATH
-./QtDemo/Linux64/lib/QtClientDemo
+./QtClientDemo
 ```
 
 Alternatively, register the path permanently:
@@ -105,7 +105,7 @@ bash /workspace/sdk/build-demos.sh console
 
 | Demo | Output binary | GUI |
 |---|---|---|
-| QtDemo | `QtDemo/Linux64/lib/QtClientDemo` | Qt5 |
+| QtDemo | `QtClientDemo` | Qt5 |
 | consoleDemo | `consoleDemo/linux64/lib/sdkTest` | None (CLI) |
 | LinuxJavaDemo | built via `ant build` | Java Swing |
 
