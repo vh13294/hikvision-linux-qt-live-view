@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     make \
     pkg-config \
     git \
+    ca-certificates \
     curl \
     wget \
     sudo \
