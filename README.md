@@ -96,7 +96,7 @@ docker compose up --build
 > `/proc/stat` read. Disabling BuildKit (`DOCKER_BUILDKIT=0`) falls back to the classic Docker builder,
 > which runs in-process and has no separate daemon to lose connection to.
 
-**Open:** `http://localhost:8080` — no password required (port is bound to localhost only).
+**Open:** `http://localhost:9015` — no password required (port is bound to localhost only).
 
 ---
 
