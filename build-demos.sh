@@ -15,26 +15,32 @@ if ! grep -q 'widgets' "$PRO"; then
     sed -i 's/QT +=\(.*\)opengl/QT +=\1opengl \\\n\twidgets/' "$PRO"
 fi
 
+# Build outputs go under ~/build/ so the developer user can always write there,
+# regardless of the ownership of the mounted /workspace/sdk volume.
+BUILD_BASE=${BUILD_BASE:-$HOME/build}
+
 # ── Console demo ───────────────────────────────────────────────────────────────
 build_console() {
     echo "=== Building consoleDemo ==="
+    local out="$BUILD_BASE/console"
+    mkdir -p "$out/obj" "$out/lib"
     cd "$SDK/consoleDemo/linux64/proj"
-    mkdir -p obj ../lib
-    make -j"$(nproc)"
-    echo "→ Output: $SDK/consoleDemo/linux64/lib/sdkTest"
+    make -j"$(nproc)" OBJDIR="$out/obj" LIBDIR="$out/lib"
+    echo "→ Output: $out/lib/sdkTest"
 }
 
 # ── Qt demo ────────────────────────────────────────────────────────────────────
 build_qt() {
     echo "=== Building QtClientDemo ==="
-    cd "$SDK/QtDemo/Linux64/QtCreator"
-    mkdir -p obj/Gui obj/Moc obj/Obj
-    # -spec linux-g++ ensures Qt5 spec is used
-    qmake -spec linux-g++ QtClientDemo.pro \
+    local out="$BUILD_BASE/qt"
+    mkdir -p "$out"
+    # Shadow build: qmake from a writable directory, point at the .pro file
+    cd "$out"
+    qmake -spec linux-g++ "$SDK/QtDemo/Linux64/QtCreator/QtClientDemo.pro" \
         QMAKE_LIBDIR+="$SDK/lib" \
         QMAKE_RPATHDIR+="$SDK/lib:$SDK/lib/HCNetSDKCom"
     make -j"$(nproc)"
-    echo "→ Output: $SDK/QtClientDemo"
+    echo "→ Output: $out/QtClientDemo"
 }
 
 case "$TARGET" in

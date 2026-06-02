@@ -117,8 +117,8 @@ bash /workspace/sdk/build-demos.sh console
 
 | Demo | Output binary | GUI |
 |---|---|---|
-| QtDemo | `QtClientDemo` | Qt5 |
-| consoleDemo | `consoleDemo/linux64/lib/sdkTest` | None (CLI) |
+| QtDemo | `~/build/qt/QtClientDemo` | Qt5 |
+| consoleDemo | `~/build/console/lib/sdkTest` | None (CLI) |
 | LinuxJavaDemo | built via `ant build` | Java Swing |
 
 ---
