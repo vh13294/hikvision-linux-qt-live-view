@@ -11,7 +11,7 @@
 #ifndef REALPLAY_H
 #define REALPLAY_H
 
-#include <QtGui/QWidget>
+#include <QtWidgets/QWidget>
 #include <QModelIndex>
 #include "ui_realplay.h"
 #include <QFrame>

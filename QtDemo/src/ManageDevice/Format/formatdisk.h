@@ -11,7 +11,7 @@
 #ifndef FORMATDISK_H
 #define FORMATDISK_H
 
-#include <QtGui/QDialog>
+#include <QtWidgets/QDialog>
 #include "ui_formatdisk.h"
 #include "DemoPublic.h"
 

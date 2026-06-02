@@ -1,7 +1,7 @@
 #ifndef ALARMTABLE_H
 #define ALARMTABLE_H
 
-#include <QtGui/QWidget>
+#include <QtWidgets/QWidget>
 #include "ui_alarmtable.h"
 #include "DemoPublic.h"
 

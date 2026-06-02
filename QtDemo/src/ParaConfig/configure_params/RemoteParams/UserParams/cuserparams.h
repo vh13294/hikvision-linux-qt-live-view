@@ -1,9 +1,9 @@
 #ifndef CUSERPARAMS_H
 #define CUSERPARAMS_H
 
-#include <QtGui/QDialog>
-#include <QtGui/QLineEdit>
-#include <QtGui/QPushButton>
+#include <QtWidgets/QDialog>
+#include <QtWidgets/QLineEdit>
+#include <QtWidgets/QPushButton>
 #include "ui_cuserparams.h"
 #include "DemoPublic.h"
 

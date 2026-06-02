@@ -11,7 +11,7 @@
 #ifndef DEVICEPAN_H
 #define DEVICEPAN_H
 #include <QDialog>
-#include <QtGui/QWidget>
+#include <QtWidgets/QWidget>
 #include "ui_devicepan.h"
 #include "DemoPublic.h"
 

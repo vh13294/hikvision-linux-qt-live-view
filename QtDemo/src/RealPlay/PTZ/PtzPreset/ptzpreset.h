@@ -11,7 +11,7 @@
 #ifndef PTZPRESET_H
 #define PTZPRESET_H
 
-#include <QtGui/QDialog>
+#include <QtWidgets/QDialog>
 #include "ui_ptzpreset.h"
 #include "DemoPublic.h"
 

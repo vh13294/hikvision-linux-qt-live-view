@@ -13,7 +13,7 @@
 #ifndef CCONFIGUREPARAMS_H
 #define CCONFIGUREPARAMS_H
 
-#include <QtGui/QWidget>
+#include <QtWidgets/QWidget>
 #include <QMessageBox>
 #include "cremoteparams.h"
 #include "cipparams.h"

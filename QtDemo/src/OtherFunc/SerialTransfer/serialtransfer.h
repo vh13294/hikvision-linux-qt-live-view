@@ -11,7 +11,7 @@
 #ifndef SERIALTRANSFER_H
 #define SERIALTRANSFER_H
 
-#include <QtGui/QWidget>
+#include <QtWidgets/QWidget>
 #include "ui_serialtransfer.h"
 #include "DemoPublic.h"
 

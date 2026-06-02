@@ -12,7 +12,7 @@
 #define DEVICESTATE_H
 #include <QDialog>
 #include <QList>
-#include <QtGui/QWidget>
+#include <QtWidgets/QWidget>
 #include "ui_devicestate.h"
 #include "DemoPublic.h"
 #include "devicedata.h"

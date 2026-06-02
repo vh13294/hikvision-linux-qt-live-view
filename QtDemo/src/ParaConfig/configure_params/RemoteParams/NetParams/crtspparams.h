@@ -1,7 +1,7 @@
 #ifndef CRTSPPARAMS_H
 #define CRTSPPARAMS_H
 
-#include <QtGui/QDialog>
+#include <QtWidgets/QDialog>
 #include "ui_crtspparams.h"
 
 class CRtspParams : public QDialog

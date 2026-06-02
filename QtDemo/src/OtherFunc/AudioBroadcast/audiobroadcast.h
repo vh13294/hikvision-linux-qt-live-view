@@ -11,7 +11,7 @@
 #ifndef AUDIOBROADCAST_H
 #define AUDIOBROADCAST_H
 
-#include <QtGui/QWidget>
+#include <QtWidgets/QWidget>
 #include "ui_audiobroadcast.h"
 
 class AudioBroadcast : public QWidget

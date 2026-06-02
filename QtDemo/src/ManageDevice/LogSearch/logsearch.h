@@ -11,7 +11,7 @@
 #ifndef LOGSEARCH_H
 #define LOGSEARCH_H
 
-#include <QtGui/QWidget>
+#include <QtWidgets/QWidget>
 #include "ui_logsearch.h"
 #include "DemoPublic.h"
 #include "devicedata.h"

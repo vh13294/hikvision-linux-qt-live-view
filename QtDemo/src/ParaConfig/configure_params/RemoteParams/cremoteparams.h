@@ -1,7 +1,7 @@
 #ifndef CREMOTEPARAMS_H
 #define CREMOTEPARAMS_H
 
-#include <QtGui/QWidget>
+#include <QtWidgets/QWidget>
 #include <QLineEdit>
 
 #ifndef HPR_OK

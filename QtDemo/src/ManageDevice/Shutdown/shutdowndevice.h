@@ -11,7 +11,7 @@
 #ifndef SHUTDOWNDEVICE_H
 #define SHUTDOWNDEVICE_H
 
-#include <QtGui/QWidget>
+#include <QtWidgets/QWidget>
 #include "ui_shutdowndevice.h"
 #include "DemoPublic.h"
 

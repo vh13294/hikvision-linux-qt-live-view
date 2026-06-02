@@ -11,7 +11,7 @@
 #ifndef RESETDEVICE_H
 #define RESETDEVICE_H
 
-#include <QtGui/QWidget>
+#include <QtWidgets/QWidget>
 #include "ui_resetdevice.h"
 #include "DemoPublic.h"
 

@@ -1,7 +1,7 @@
 #ifndef CSERIALPARAMS_H
 #define CSERIALPARAMS_H
 
-#include <QtGui/QWidget>
+#include <QtWidgets/QWidget>
 #include <QCheckBox>
 #include <QMessageBox>
 #include <QLineEdit>

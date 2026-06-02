@@ -1,7 +1,7 @@
 #ifndef LOGTABLE_H
 #define LOGTABLE_H
 
-#include <QtGui/QWidget>
+#include <QtWidgets/QWidget>
 #include "ui_logtable.h"
 #include <QString>
 #include <QMessageBox>

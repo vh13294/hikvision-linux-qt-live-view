@@ -11,7 +11,7 @@
 #ifndef IMPORTCONFIG_H
 #define IMPORTCONFIG_H
 #include <QDialog>
-#include <QtGui/QWidget>
+#include <QtWidgets/QWidget>
 #include "ui_importconfig.h"
 #include "DemoPublic.h"
 #include "devicedata.h"

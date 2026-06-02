@@ -12,7 +12,7 @@
 #ifndef CALARMINPTZ_H
 #define CALARMINPTZ_H
 
-#include <QtGui/QDialog>
+#include <QtWidgets/QDialog>
 #include "ui_calarminptz.h"
 #include "DemoPublic.h"
 

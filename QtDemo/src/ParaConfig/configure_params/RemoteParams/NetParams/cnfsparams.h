@@ -1,7 +1,7 @@
 #ifndef CNFSPARAMS_H
 #define CNFSPARAMS_H
 
-#include <QtGui/QDialog>
+#include <QtWidgets/QDialog>
 #include "ui_cnfsparams.h"
 #include "DemoPublic.h"
 

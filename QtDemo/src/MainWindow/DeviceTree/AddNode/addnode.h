@@ -11,7 +11,7 @@
 #ifndef ADDNODE_H
 #define ADDNODE_H
 
-#include <QtGui/QDialog>
+#include <QtWidgets/QDialog>
 #include "ui_addnode.h"
 
 #include "DemoPublic.h"

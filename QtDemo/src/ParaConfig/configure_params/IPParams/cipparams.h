@@ -1,8 +1,8 @@
 #ifndef CIPPARAMS_H
 #define CIPPARAMS_H
 
-#include <QtGui/QWidget>
-#include <QtGui/QPushButton>
+#include <QtWidgets/QWidget>
+#include <QtWidgets/QPushButton>
 #include "ui_cipparams.h"
 #include "DemoPublic.h"
 

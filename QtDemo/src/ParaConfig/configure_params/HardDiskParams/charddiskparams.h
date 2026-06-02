@@ -1,8 +1,8 @@
 #ifndef CHARDDISKPARAMS_H
 #define CHARDDISKPARAMS_H
 
-#include <QtGui/QWidget>
-#include <QtGui/QCheckBox>
+#include <QtWidgets/QWidget>
+#include <QtWidgets/QCheckBox>
 #include "ui_charddiskparams.h"
 #include "DemoPublic.h"
 

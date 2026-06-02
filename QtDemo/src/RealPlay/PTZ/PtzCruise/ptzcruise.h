@@ -11,7 +11,7 @@
 #ifndef PTZCRUISE_H
 #define PTZCRUISE_H
 
-#include <QtGui/QDialog>
+#include <QtWidgets/QDialog>
 #include "ui_ptzcruise.h"
 #include "DemoPublic.h"
 

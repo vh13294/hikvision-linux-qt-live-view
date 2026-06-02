@@ -1,9 +1,9 @@
 #ifndef CDLGREMOTERECORDSCHEDULE_H
 #define CDLGREMOTERECORDSCHEDULE_H
 
-#include <QtGui/QDialog>
-#include <QtGui/QLineEdit>
-#include <QtGui/QComboBox>
+#include <QtWidgets/QDialog>
+#include <QtWidgets/QLineEdit>
+#include <QtWidgets/QComboBox>
 #include "ui_cdlgremoterecordschedule.h"
 #include "DemoPublic.h"
 

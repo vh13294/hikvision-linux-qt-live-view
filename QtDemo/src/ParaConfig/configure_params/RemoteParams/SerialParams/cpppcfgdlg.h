@@ -1,7 +1,7 @@
 #ifndef CPPPCFGDLG_H
 #define CPPPCFGDLG_H
 
-#include <QtGui/QDialog>
+#include <QtWidgets/QDialog>
 #include <QCheckBox>
 #include <QLineEdit>
 #include "DemoPublic.h"

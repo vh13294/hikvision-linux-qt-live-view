@@ -1,9 +1,9 @@
 #ifndef CHIDEALARM_H
 #define CHIDEALARM_H
 
-#include <QtGui/QDialog>
-#include <QtGui/QCheckBox>
-#include <QtGui/QLineEdit>
+#include <QtWidgets/QDialog>
+#include <QtWidgets/QCheckBox>
+#include <QtWidgets/QLineEdit>
 #include "ui_chidealarm.h"
 #include "DemoPublic.h"
 

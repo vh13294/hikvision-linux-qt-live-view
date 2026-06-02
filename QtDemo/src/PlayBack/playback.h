@@ -10,7 +10,7 @@
 #ifndef PLAYBACK_H
 #define PLAYBACK_H
 
-#include <QtGui/QWidget>
+#include <QtWidgets/QWidget>
 #include <QString>
 #include <QTimer>
 #include <QList>

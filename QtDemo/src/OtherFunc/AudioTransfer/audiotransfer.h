@@ -11,7 +11,7 @@
 #ifndef AUDIOTRANSFER_H
 #define AUDIOTRANSFER_H
 
-#include <QtGui/QWidget>
+#include <QtWidgets/QWidget>
 #include "ui_audiotransfer.h"
 #include <QList>
 #include "DemoPublic.h"

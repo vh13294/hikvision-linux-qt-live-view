@@ -1,7 +1,7 @@
 #ifndef EXCEPTIONPARAMS_H
 #define EXCEPTIONPARAMS_H
 
-#include <QtGui/QWidget>
+#include <QtWidgets/QWidget>
 #include <QCheckBox>
 #include <QMessageBox>
 #include "DemoPublic.h"

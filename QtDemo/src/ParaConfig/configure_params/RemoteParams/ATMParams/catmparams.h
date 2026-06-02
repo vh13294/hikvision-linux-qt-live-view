@@ -13,7 +13,7 @@
 #ifndef CATMPARAMS_H
 #define CATMPARAMS_H
 
-#include <QtGui/QWidget>
+#include <QtWidgets/QWidget>
 #include "ui_catmparams.h"
 #include "catmnetparams.h"
 

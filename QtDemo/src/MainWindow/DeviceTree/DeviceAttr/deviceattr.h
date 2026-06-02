@@ -10,7 +10,7 @@
 #ifndef DEVICEATTR_H
 #define DEVICEATTR_H
 
-#include <QtGui/QDialog>
+#include <QtWidgets/QDialog>
 #include "ui_deviceattr.h"
 
 class DeviceAttr : public QDialog

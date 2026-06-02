@@ -1,7 +1,7 @@
 #ifndef CADVANCEDNETPARAMS_H
 #define CADVANCEDNETPARAMS_H
 
-#include <QtGui/QDialog>
+#include <QtWidgets/QDialog>
 #include<QStandardItemModel>
 #include "ui_cadvancednetparams.h"
 

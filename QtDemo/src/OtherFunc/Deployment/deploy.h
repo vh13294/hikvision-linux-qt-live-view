@@ -11,7 +11,7 @@
 #ifndef DEPLOY_H
 #define DEPLOY_H
 
-#include <QtGui/QWidget>
+#include <QtWidgets/QWidget>
 #include "ui_deploy.h"
 #include <QList>
 #include "DemoPublic.h"

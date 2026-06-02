@@ -1,7 +1,7 @@
 #ifndef CCHANNELPARAMS_H
 #define CCHANNELPARAMS_H
 
-#include <QtGui/QWidget>
+#include <QtWidgets/QWidget>
 #include "ui_cchannelparams.h"
 #include "DemoPublic.h"
 

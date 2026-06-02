@@ -1,7 +1,7 @@
 #ifndef CZONEDST_H
 #define CZONEDST_H
 
-#include <QtGui/QDialog>
+#include <QtWidgets/QDialog>
 #include "ui_czonedst.h"
 
 class CZoneDst : public QDialog

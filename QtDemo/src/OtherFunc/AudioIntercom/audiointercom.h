@@ -11,7 +11,7 @@
 #ifndef AUDIOINTERCOM_H
 #define AUDIOINTERCOM_H
 
-#include <QtGui/QWidget>
+#include <QtWidgets/QWidget>
 #include "ui_audiointercom.h"
 
 class AudioIntercom : public QWidget

@@ -11,7 +11,7 @@
 #ifndef TIMING_H
 #define TIMING_H
 
-#include <QtGui/QWidget>
+#include <QtWidgets/QWidget>
 #include "ui_timing.h"
 #include <QList>
 #include <QString>

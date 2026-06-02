@@ -1,7 +1,7 @@
 #ifndef CALARMPARAMSDLG_H
 #define CALARMPARAMSDLG_H
 
-#include <QtGui/QDialog>
+#include <QtWidgets/QDialog>
 #include <QCheckBox>
 #include <QMessageBox>
 #include "DemoPublic.h"

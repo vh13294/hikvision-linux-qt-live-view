@@ -10,7 +10,7 @@
 #ifndef CHANNELATTR_H
 #define CHANNELATTR_H
 
-#include <QtGui/QDialog>
+#include <QtWidgets/QDialog>
 #include "ui_channelattr.h"
 
 class ChannelAttr : public QDialog
