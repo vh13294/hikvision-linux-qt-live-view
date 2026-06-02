@@ -84,6 +84,18 @@ with Qt5 tools and VS Code in the browser.
 docker compose up --build
 ```
 
+> **Proxmox LXC / memory-constrained hosts:** if the build completes but fails at the very end with
+> `failed to solve: Internal: open /proc/stat: transport endpoint is not connected`, disable BuildKit:
+> ```bash
+> DOCKER_BUILDKIT=0 docker compose up --build
+> ```
+> **Why it works:** BuildKit runs as a separate daemon that reads `/proc/stat` to report resource usage
+> after exporting layers. On Proxmox LXC, the daemon can be OOM-killed mid-export (this image is large —
+> Qt5 + build tools + code-server), which severs the gRPC connection between the Docker CLI and the
+> BuildKit daemon. The resulting disconnect surfaces as `transport endpoint is not connected` on the
+> `/proc/stat` read. Disabling BuildKit (`DOCKER_BUILDKIT=0`) falls back to the classic Docker builder,
+> which runs in-process and has no separate daemon to lose connection to.
+
 **Open:** `http://localhost:8080` — no password required (port is bound to localhost only).
 
 ---
