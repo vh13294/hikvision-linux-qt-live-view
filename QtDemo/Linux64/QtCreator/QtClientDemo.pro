@@ -8,7 +8,8 @@ OBJECTS_DIR = obj/Obj
 TARGET = ../lib/QtClientDemo
 QT +=	core \
 	gui \
-	opengl
+	opengl \
+	widgets
 
 
 TRANSLATIONS = ../../translation/QtDemo_zh_CN.ts	

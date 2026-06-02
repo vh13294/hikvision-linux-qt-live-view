@@ -112,23 +112,6 @@ bash /workspace/sdk/build-demos.sh console
 | consoleDemo | `consoleDemo/linux64/lib/sdkTest` | None (CLI) |
 | LinuxJavaDemo | built via `ant build` | Java Swing |
 
-### Qt4 → Qt5 Compatibility Note
-
-The project file [QtDemo/Linux64/QtCreator/QtClientDemo.pro](QtDemo/Linux64/QtCreator/QtClientDemo.pro)
-was written for Qt4. One line must be changed before it compiles with Qt5:
-
-```diff
-- QT += core \
--     gui \
--     opengl
-+ QT += core \
-+     gui \
-+     opengl \
-+     widgets
-```
-
-The `build-demos.sh` script applies this patch automatically.
-
 ---
 
 ## SDK Library Layout
