@@ -42,7 +42,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # ── code-server (VS Code in browser) ──────────────────────────────────────────
 RUN curl -fsSL https://code-server.dev/install.sh | sh \
-    && rm -rf /tmp/code-server* /root/.cache
+    && rm -rf /tmp/code-server* /root/.cache \
+    && CS_BIN=$(command -v code-server 2>/dev/null \
+        || find /root/.local/bin /usr/lib/code-server/bin -name code-server -type f 2>/dev/null | head -1) \
+    && ln -sf "$CS_BIN" /usr/local/bin/code-server \
+    && /usr/local/bin/code-server --version
 
 # ── Non-root developer user ────────────────────────────────────────────────────
 RUN useradd -m -u 1000 -s /bin/bash developer \
