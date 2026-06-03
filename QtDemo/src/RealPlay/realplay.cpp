@@ -67,6 +67,8 @@ RealPlay::RealPlay(TreeModel**  model ,const QModelIndex * index, QList<DeviceDa
 	m_rpmodel = model;
 	m_rpmodelindex = index;
 	m_rpuseridbackup = -1;
+	m_rpfirstrealhandle = -1;
+	m_rpcurrentrealhandle = -1;
 	//Record net_dvr interface called info.
 	if (table != NULL)
 	{
@@ -690,7 +692,7 @@ int RealPlay::realPlayEncapseInterface(int devicerow, int channelrow, NET_DVR_CL
 
 		//����Ԥ��������Ϊ�����ӿ�ʹ��
 		m_rpcurrentrealhandle = realhandle;
-		if (struPlayInfo.lChannel == 1)
+		if (m_rpfirstrealhandle < 0)
 		{
 			m_rpfirstrealhandle = realhandle;
 		}
@@ -766,6 +768,8 @@ void RealPlay::stopRealPlayEncapseInterface()
 //QMessageBox::information(this,tr("stopRealPlayEncapseInterface"),tr("738"));
 	//�޸��豸�ڵ���Ԥ��״̬����
 	(*it).setRealPlayLabel(0);
+	m_rpfirstrealhandle = -1;
+	m_rpcurrentrealhandle = -1;
 
 }
 /************************************************************************
@@ -1566,22 +1570,22 @@ void RealPlay::on_pushButton_trackmemoryrun_clicked()
 *************************************************************************/
 void RealPlay::getVideoEffect()
 {
+    if (m_rpcurrentrealhandle < 0)
+    {
+        return;
+    }
     if (!NET_DVR_ClientGetVideoEffect(m_rpcurrentrealhandle,(DWORD *)&m_rpbrightvalue,
        (DWORD*)&m_rpcontrastvalue,(DWORD*)&m_rpsaturationvalue,(DWORD *)&m_rphuevalue))
     {
-    	
-        QMessageBox::information(this,tr("NET_DVR_ClientGetVideoEffect"),
-                tr("SDK_LASTERROR=%1").arg(NET_DVR_GetLastError()));
+        // Silently ignore — error 17 (NET_DVR_NOENOUGHPRI) is expected for IP
+        // channels on NVR and does not affect live view. Sliders keep defaults.
+        return;
     }
-	else
-	{ 
-	    ui.horizontalSlider_bright->setValue(m_rpbrightvalue);
-	    ui.horizontalSlider_contrast->setValue(m_rpcontrastvalue);
-	    ui.horizontalSlider_saturation->setValue(m_rpsaturationvalue);
-	    ui.horizontalSlider_hue->setValue(m_rphuevalue);
-	    ui.horizontalSlider_volume->setValue(m_rpvolumvalue);
-	}
-
+    ui.horizontalSlider_bright->setValue(m_rpbrightvalue);
+    ui.horizontalSlider_contrast->setValue(m_rpcontrastvalue);
+    ui.horizontalSlider_saturation->setValue(m_rpsaturationvalue);
+    ui.horizontalSlider_hue->setValue(m_rphuevalue);
+    ui.horizontalSlider_volume->setValue(m_rpvolumvalue);
 }
 
 /************************************************************************

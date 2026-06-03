@@ -502,7 +502,30 @@ QtClientDemo::QtClientDemo(QWidget *parent): QMainWindow(parent)
 	on_radioButton_locallog_pressed ();
 	ui.radioButton_locallog->setChecked(1);
 	
-	//AT last need init SDK 
+	//AT last need init SDK
+    // Tell the SDK where its component libraries and crypto libraries live.
+    // Without this, HPR_LoadDso fails to locate libPlayCtrl.so and its
+    // siblings at runtime, causing a segfault when the video stream starts.
+    {
+        QString exePath = QFile::symLinkTarget("/proc/self/exe");
+        QString libDir  = exePath.left(exePath.lastIndexOf('/')) + "/lib";
+
+        NET_DVR_LOCAL_SDK_PATH sdkPath = {};
+        QByteArray comPath = (libDir + "/HCNetSDKCom").toLatin1();
+        strncpy(sdkPath.sPath, comPath.constData(), sizeof(sdkPath.sPath) - 1);
+        NET_DVR_SetSDKInitCfg(NET_SDK_INIT_CFG_SDK_PATH, &sdkPath);
+
+        NET_DVR_LOCAL_SDK_PATH cryptoPath = {};
+        QByteArray cryptoLib = (libDir + "/libcrypto.so.1.1").toLatin1();
+        strncpy(cryptoPath.sPath, cryptoLib.constData(), sizeof(cryptoPath.sPath) - 1);
+        NET_DVR_SetSDKInitCfg(NET_SDK_INIT_CFG_LIBEAY_PATH, &cryptoPath);
+
+        NET_DVR_LOCAL_SDK_PATH sslPath = {};
+        QByteArray sslLib = (libDir + "/libssl.so.1.1").toLatin1();
+        strncpy(sslPath.sPath, sslLib.constData(), sizeof(sslPath.sPath) - 1);
+        NET_DVR_SetSDKInitCfg(NET_SDK_INIT_CFG_SSLEAY_PATH, &sslPath);
+    }
+
     if (!NET_DVR_Init())
     {
         QMessageBox::information(this,tr("SDK INITIAL ERROR"), \

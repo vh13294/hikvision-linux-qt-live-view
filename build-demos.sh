@@ -34,14 +34,31 @@ build_qt() {
     echo "=== Building QtClientDemo ==="
     local out="$BUILD_BASE/qt"
     mkdir -p "$out"
-    # Shadow build: qmake from a writable directory, point at the .pro file
+
+    # Shadow build: qmake from a writable directory, point at the .pro file.
+    # Use $ORIGIN-relative RPATHs so the binary works wherever it is deployed,
+    # without requiring LD_LIBRARY_PATH to be set externally.
     cd "$out"
     qmake -spec linux-g++ "$SDK/QtDemo/Linux64/QtCreator/QtClientDemo.pro" \
         QMAKE_LIBDIR+="$SDK/lib" \
-        QMAKE_RPATHDIR+="$SDK/lib:$SDK/lib/HCNetSDKCom"
+        QMAKE_RPATHDIR+="$SDK/lib:$SDK/lib/HCNetSDKCom" \
+        QMAKE_LFLAGS+="-Wl,-rpath,\\\$\$ORIGIN/lib,-rpath,\\\$\$ORIGIN/lib/HCNetSDKCom"
     make -j"$(nproc)"
     cp -r "$SDK/lib" "$out/"
     cp -r "$SDK/QtDemo/translation" "$out/"
+
+    # libPlayCtrl.so ships with RPATH="./", which resolves to the process's
+    # working directory, not the library's own directory.  Fix it to $ORIGIN
+    # so dlopen can find libAudioRender.so / libSuperRender.so as siblings.
+    if command -v patchelf >/dev/null 2>&1; then
+        patchelf --set-rpath '$ORIGIN' "$out/lib/libPlayCtrl.so"
+        echo "[patch] Fixed libPlayCtrl.so RPATH → \$ORIGIN"
+    else
+        echo "[warn] patchelf not found — install it to fix libPlayCtrl.so RPATH:"
+        echo "       sudo apt-get install -y patchelf"
+        echo "       patchelf --set-rpath '\$ORIGIN' $out/lib/libPlayCtrl.so"
+    fi
+
     cat > "$out/run.sh" << 'EOF'
 #!/bin/bash
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
