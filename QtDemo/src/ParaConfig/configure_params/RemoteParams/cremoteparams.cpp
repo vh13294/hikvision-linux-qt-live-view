@@ -107,13 +107,13 @@ CRemoteParams::~CRemoteParams()
         delete m_pChannelParams;
      }
 
-    //”√ªß¥∞ø⁄÷∏’Î
+    //ÔøΩ√ªÔøΩÔøΩÔøΩÔøΩÔøΩ÷∏ÔøΩÔøΩ
     if(NULL != m_pUserParams)
     {
     	delete m_pUserParams;
     }
 
-    delete m_pATMParams; //Ωª“◊–≈œ¢
+    delete m_pATMParams; //ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩœ¢
 }
 
 void CRemoteParams::clickTabPage(int iTabIndex)
@@ -145,13 +145,13 @@ void CRemoteParams::clickTabPage(int iTabIndex)
         	 m_pChannelParams->setUserID(m_lUserID);
          }
          break;
-     case 2:  //¥Æø⁄≤Œ ˝
+     case 2:  //ÔøΩÔøΩÔøΩ⁄≤ÔøΩÔøΩÔøΩ
     	 if(m_pSerialParams != NULL)
     	 {
     		 m_pSerialParams->setUserID(m_lUserID);
     	 }
     	 break;
-     case 3: //±®æØ≤Œ ˝
+     case 3: //ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ
     	 if(m_pAlarmParams != NULL)
     	 {
     		 m_pAlarmParams->setUserID(m_lUserID);
@@ -160,7 +160,7 @@ void CRemoteParams::clickTabPage(int iTabIndex)
      case 4: //user parameters
     	 if(NULL == m_pUserParams)
     	 {
-    		 //¥¥Ω®”√ªß≤Œ ˝¥∞ø⁄
+    		 //ÔøΩÔøΩÔøΩÔøΩÔøΩ√ªÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ
     		 m_pUserParams = new(std::nothrow) CUserParams;
     		 if(m_pUserParams != NULL)
     		 {
@@ -177,16 +177,16 @@ void CRemoteParams::clickTabPage(int iTabIndex)
     		 m_pUserParams->setUserID(m_lUserID);
     	 }
          break;
-     case 5: //“Ï≥£≤Œ ˝
+     case 5: //ÔøΩÏ≥£ÔøΩÔøΩÔøΩÔøΩ
     	 if(m_pExceptionParams != NULL)
     	 {
     		 m_pExceptionParams->setUserID(m_lUserID);
     	 }
     	 break;
-     case 6: //ATM≤Œ ˝
+     case 6: //ATMÔøΩÔøΩÔøΩÔøΩ
     	 if(NULL == m_pATMParams)
 		 {
-			 //¥¥Ω®ATM≤Œ ˝¥∞ø⁄
+			 //ÔøΩÔøΩÔøΩÔøΩATMÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ
     		 m_pATMParams = new(std::nothrow) CATMParams;
 			 if(m_pATMParams != NULL)
 			 {
@@ -251,40 +251,40 @@ void CRemoteParams::refreshParams()
 
     switch(m_iTabIndex)
     {
-        case 0://ª˘±æ≤Œ ˝
+        case 0://ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ
         	getDeviceInfo(); //Device information.
         	getNetInfo();      //Get net iformation.
         	getScaleInfo();
       	    break;
-        case 1://Õ®µ¿≤Œ ˝
+        case 1://Õ®ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ
       	    if(m_pChannelParams != NULL)
       	    {
       	    	m_pChannelParams->setUserID(m_lUserID);
       		    m_pChannelParams->getAllInfo();
       	    }
       	    break;
-        case 2: //¥Æø⁄≤Œ ˝
+        case 2: //ÔøΩÔøΩÔøΩ⁄≤ÔøΩÔøΩÔøΩ
         	if(m_pSerialParams != NULL)
         	{
         		m_pSerialParams->setUserID(m_lUserID);
         		m_pSerialParams->refreshparams();
         	}
         	break;
-        case 3: //±®æØ ‰»Î ‰≥ˆ≤Œ ˝
+        case 3: //ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ
         	if(m_pAlarmParams != NULL)
         	{
         		m_pAlarmParams->setUserID(m_lUserID);
         		m_pAlarmParams->getAlarmInfo();
         	}
         	break;
-        case 4://”√ªß≤Œ ˝
+        case 4://ÔøΩ√ªÔøΩÔøΩÔøΩÔøΩÔøΩ
         	if(m_pUserParams != NULL)
         	{
         		m_pUserParams->setUserID(m_lUserID);
         		m_pUserParams->getAllInfo();
         	}
             break;
-        case 6: //ATM≤Œ ˝
+        case 6: //ATMÔøΩÔøΩÔøΩÔøΩ
         	if(m_pATMParams != NULL)
         	{
         		m_pATMParams->setUserID(m_lUserID);
@@ -322,7 +322,7 @@ void CRemoteParams::saveParams()
     		m_pUserParams->setAllInfo();
     	}
     	break;
-    case 6: //ATM≤Œ ˝
+    case 6: //ATMÔøΩÔøΩÔøΩÔøΩ
     	if(m_pATMParams != NULL)
     	{
     		m_pATMParams->setATMInfo();
@@ -465,6 +465,11 @@ int CRemoteParams::setDeviceInfo()
 //Get net params;
 int CRemoteParams::getNetInfo()
 {
+    if(m_lUserID < 0)
+    {
+        return HPR_ERROR;
+    }
+
     NET_DVR_NETCFG_V30 netParams;
     memset(&netParams, 0, sizeof(NET_DVR_NETCFG_V30));
     QString qstrTemp;
@@ -696,7 +701,7 @@ int CRemoteParams::setNetInfo()
     return HPR_OK;
 }
 
-// ”∆µÀı∑≈
+//ÔøΩÔøΩ∆µÔøΩÔøΩÔøΩÔøΩ
 int CRemoteParams::getScaleInfo()
 {
 	if(m_lUserID < 0)
@@ -706,7 +711,7 @@ int CRemoteParams::getScaleInfo()
 
 	NET_DVR_SCALECFG struScaleParams;
 	int iRet;
-	//ªÒ»° ”∆µÀı∑≈≤Œ ˝
+	//ÔøΩÔøΩ»°ÔøΩÔøΩ∆µÔøΩÔøΩÔøΩ≈≤ÔøΩÔøΩÔøΩ
 	iRet = NET_DVR_GetScaleCFG_V30(m_lUserID, &struScaleParams);
 	if (iRet == 0)
 	{
@@ -715,7 +720,7 @@ int CRemoteParams::getScaleInfo()
 		return HPR_ERROR;
 	}
 
-	//–¥»Îøÿº˛÷–»•
+	//–¥ÔøΩÔøΩÿºÔøΩÔøΩÔøΩ»•
 	m_ui->comboMajorScale->setCurrentIndex((int)struScaleParams.dwMajorScale);
 	m_ui->comboMinorScale->setCurrentIndex((int)struScaleParams.dwMinorScale);
 
@@ -731,7 +736,7 @@ int CRemoteParams::setScaleInfo()
 
 	NET_DVR_SCALECFG struScaleParams;
 	int iRet;
-	//ªÒ»° ”∆µÀı∑≈≤Œ ˝
+	//ÔøΩÔøΩ»°ÔøΩÔøΩ∆µÔøΩÔøΩÔøΩ≈≤ÔøΩÔøΩÔøΩ
 	iRet = NET_DVR_GetScaleCFG_V30(m_lUserID, &struScaleParams);
 	if (iRet == 0)
 	{
@@ -739,10 +744,10 @@ int CRemoteParams::setScaleInfo()
 		QMessageBox::information(this, tr("Please check!"), tr("Get scale parameters error! \"%1\"").arg(iRet));
 		return HPR_ERROR;
 	}
-	//¥”øÿº˛÷–ªÒ»° ˝æ›
+	//ÔøΩ”øÿºÔøΩÔøΩ–ªÔøΩ»°ÔøΩÔøΩÔøΩÔøΩ
 	struScaleParams.dwMajorScale = m_ui->comboMajorScale->currentIndex();
 	struScaleParams.dwMinorScale = m_ui->comboMinorScale->currentIndex();
-	//–¥»Î…Ë±∏
+	//–¥ÔøΩÔøΩÔøΩË±∏
 	iRet = NET_DVR_SetScaleCFG_V30(m_lUserID, &struScaleParams);
 	if (iRet == 0)
 	{
@@ -975,7 +980,11 @@ void CRemoteParams::showEvent ( QShowEvent * event )
 	if(event ==NULL)
 	{
 	}
-	//ªÒ»°œ‘ æ≤Œ ˝
+	if(m_lUserID < 0)
+	{
+		return;
+	}
+	//ÔøΩÔøΩ»°ÔøΩÔøΩ æÔøΩÔøΩÔøΩÔøΩ
 	refreshParams();
 	clickTabPage(4);
 }
