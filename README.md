@@ -46,6 +46,21 @@ to match your host user (`id -u` / `id -g`). The default is `0`/`0` (root) for P
 
 ---
 
+## Releases
+
+Pre-built binaries are attached to each [GitHub Release](https://github.com/vh13294/hikvision-linux-qt-live-view/releases) as `QtClientDemo-linux64.tar.gz` (binary + SDK libs + run script).
+
+To publish a new release, tag and push:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+GitHub Actions will build the Qt demo on Ubuntu 22.04 and attach the packaged binary to the release automatically.
+
+---
+
 ## Building the Demos
 
 Run inside the code-server terminal (or any Linux shell with the dependencies installed):
