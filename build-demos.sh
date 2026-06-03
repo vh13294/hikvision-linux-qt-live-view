@@ -40,6 +40,7 @@ build_qt() {
     # without requiring LD_LIBRARY_PATH to be set externally.
     cd "$out"
     qmake -spec linux-g++ "$SDK/QtDemo/Linux64/QtCreator/QtClientDemo.pro" \
+        TARGET=QtClientDemo \
         QMAKE_LIBDIR+="$SDK/lib" \
         QMAKE_RPATHDIR+="$SDK/lib:$SDK/lib/HCNetSDKCom" \
         QMAKE_LFLAGS+="-Wl,-rpath,\\\$\$ORIGIN/lib,-rpath,\\\$\$ORIGIN/lib/HCNetSDKCom"
