@@ -54,23 +54,6 @@ sudo dnf install \
     openal-soft
 ```
 
-### Why Debian 12 / Rocky 9 Need Extra Steps
-
-These distros ship OpenSSL 3.x which removed the `libssl.so.1.1` symlink.
-The SDK ships its own copy in `lib/`, so you must tell the loader where to find it:
-
-```bash
-export LD_LIBRARY_PATH=/path/to/sdk/lib:/path/to/sdk/lib/HCNetSDKCom:$LD_LIBRARY_PATH
-./QtClientDemo
-```
-
-Alternatively, register the path permanently:
-```bash
-echo "/path/to/sdk/lib" | sudo tee /etc/ld.so.conf.d/hcnetsdk.conf
-echo "/path/to/sdk/lib/HCNetSDKCom" | sudo tee -a /etc/ld.so.conf.d/hcnetsdk.conf
-sudo ldconfig
-```
-
 ---
 
 ## Development Environment (Docker + code-server)
@@ -125,42 +108,21 @@ bash build-demos.sh console
 
 ## Running the Qt Demo
 
-Build the binary (see above), then copy `build/qt/QtClientDemo` and the `lib/` folder to your
-Debian 11 machine. Install the runtime dependencies:
+Build the binary (see above). The build script automatically copies `lib/` and `translation/` into `build/qt/`, producing a self-contained directory. Zip and copy the entire `build/qt/` folder to your target machine and install the runtime dependencies:
 
 ```bash
 sudo apt install libqt5widgets5 libqt5opengl5 libsdl2-2.0-0 libopenal1
 ```
 
-Run from the directory containing `lib/`:
+Run from inside `build/qt/`:
 
 ```bash
-export LD_LIBRARY_PATH=./lib:./lib/HCNetSDKCom:$LD_LIBRARY_PATH
-./QtClientDemo
+./run.sh
 ```
 
----
+The generated `run.sh` sets `LD_LIBRARY_PATH` relative to its own location, so the folder can be placed anywhere.
 
-## SDK Library Layout
-
-```
-lib/
-├── libhcnetsdk.so          Main SDK
-├── libHCCore.so
-├── libhpr.so
-├── libPlayCtrl.so          Video playback
-├── libAudioRender.so       Audio
-├── libSuperRender.so       Video rendering
-├── libssl.so.1.1           Bundled OpenSSL 1.1.x  ← must stay with the binary
-├── libcrypto.so.1.1
-├── libopenal.so.1          Bundled OpenAL
-├── libz.so                 Bundled zlib
-└── HCNetSDKCom/            Supplementary modules (alarm, preview, playback …)
-```
-
-All libraries in `lib/` and `lib/HCNetSDKCom/` must be reachable at runtime.
-The simplest approach is to keep the executable in the same directory as the
-`lib/` folder, which is what the default build output paths do.
+For the best Qt rendering experience, use a Qt-native desktop environment: **LXQt** (lightweight) or **KDE Plasma** (full-featured). GNOME/XFCE work but apply extra theming overhead.
 
 ---
 

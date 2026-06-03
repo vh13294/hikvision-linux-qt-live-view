@@ -40,7 +40,16 @@ build_qt() {
         QMAKE_LIBDIR+="$SDK/lib" \
         QMAKE_RPATHDIR+="$SDK/lib:$SDK/lib/HCNetSDKCom"
     make -j"$(nproc)"
-    echo "→ Output: $out/QtClientDemo"
+    cp -r "$SDK/lib" "$out/"
+    cp -r "$SDK/QtDemo/translation" "$out/"
+    cat > "$out/run.sh" << 'EOF'
+#!/bin/bash
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export LD_LIBRARY_PATH="$DIR/lib:$DIR/lib/HCNetSDKCom${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+exec "$DIR/QtClientDemo" "$@"
+EOF
+    chmod +x "$out/run.sh"
+    echo "→ Output: $out/QtClientDemo  (run via $out/run.sh)"
 }
 
 case "$TARGET" in
