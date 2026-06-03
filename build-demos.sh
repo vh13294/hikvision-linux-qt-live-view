@@ -3,7 +3,7 @@
 # Usage:  bash /workspace/sdk/build-demos.sh [qt|console|all]
 set -e
 
-SDK=/workspace/sdk
+SDK="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET=${1:-all}
 
 # ── Qt5 fix: QtClientDemo.pro uses Qt4 module layout. ─────────────────────────
