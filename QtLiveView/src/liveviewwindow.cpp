@@ -222,17 +222,16 @@ bool LiveViewWindow::attemptStream(const RetryEntry &e)
             if (PlayM4_OpenStream(port, nullptr, 0, 1024 * 1024)) {
                 PlayM4_SetDisplayBuf(port, 6);
                 PlayM4_Play(port, static_cast<PLAYM4_HWND>(wid));
+                PlayM4_RenderPrivateData(port, PLAYM4_RENDER_ANA_INTEL_DATA | PLAYM4_RENDER_MD, FALSE);
                 ctx = new RawPlayCtx{port, wid};
             } else {
                 PlayM4_FreePort(port);
             }
         }
     }
-    if (ctx) {
-        // hPlayWnd stays NULL — PlayCtrl manages display via the callback
-    } else {
-        // Raw path unavailable — apply device-side fallback and render normally
-        applyHideOverlay(userId, e.channel);
+    if (!ctx) {
+        if (m_config.hideVcaOverlay)
+            applyHideOverlay(userId, e.channel);
         previewInfo.hPlayWnd = (HWND)wid;
     }
 
@@ -300,17 +299,16 @@ void LiveViewWindow::startAllStreams()
                     if (PlayM4_OpenStream(port, nullptr, 0, 1024 * 1024)) {
                         PlayM4_SetDisplayBuf(port, 6);
                         PlayM4_Play(port, static_cast<PLAYM4_HWND>(wid));
+                        PlayM4_RenderPrivateData(port, PLAYM4_RENDER_ANA_INTEL_DATA | PLAYM4_RENDER_MD, FALSE);
                         ctx = new RawPlayCtx{port, wid};
                     } else {
                         PlayM4_FreePort(port);
                     }
                 }
             }
-            if (ctx) {
-                // hPlayWnd stays NULL — PlayCtrl manages display via the callback
-            } else {
-                // Raw path unavailable — apply device-side fallback and render normally
-                applyHideOverlay(userId, channel);
+            if (!ctx) {
+                if (m_config.hideVcaOverlay)
+                    applyHideOverlay(userId, channel);
                 previewInfo.hPlayWnd = (HWND)wid;
             }
 
