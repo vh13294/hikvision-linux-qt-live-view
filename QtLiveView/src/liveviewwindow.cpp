@@ -5,6 +5,23 @@
 #include <QMessageBox>
 #include <QScreen>
 
+static QString sdkErrorString(DWORD code, const QString &ip)
+{
+    QString desc;
+    switch (code) {
+    case 7:  desc = "Auth Failed";           break;
+    case 3:  desc = "Offline";               break;
+    case 10: desc = "Connection Timeout";    break;
+    case 4:  desc = "Network Send Error";    break;
+    case 5:  desc = "Network Recv Error";    break;
+    case 9:  desc = "Insufficient Privilege";break;
+    case 20: desc = "Max Users Reached";     break;
+    case 47: desc = "Device Busy";           break;
+    default: desc = QString("Error %1").arg(code); break;
+    }
+    return QString("%1\n%2").arg(ip, desc);
+}
+
 LiveViewWindow::LiveViewWindow(QWidget *parent)
     : QMainWindow(parent)
     , m_central(new QWidget(this))
@@ -99,8 +116,11 @@ void LiveViewWindow::startAllStreams()
 
         LONG userId = NET_DVR_Login_V40(&loginInfo, &deviceInfoV40);
         if (userId < 0) {
-            qWarning("Login failed for %s: error %d",
-                     dev.ip.toLatin1().constData(), NET_DVR_GetLastError());
+            DWORD err = NET_DVR_GetLastError();
+            qWarning("Login failed for %s: error %d", dev.ip.toLatin1().constData(), err);
+            // Mark all frames this device would have occupied
+            for (int i = 0; i < dev.channels.size() && frameIdx < m_frames.size(); i++, frameIdx++)
+                m_frames[frameIdx]->setStatus(sdkErrorString(err, dev.ip));
             continue;
         }
         m_userIds.append(userId);
@@ -118,14 +138,23 @@ void LiveViewWindow::startAllStreams()
 
             LONG realHandle = NET_DVR_RealPlay_V40(userId, &previewInfo, nullptr, nullptr);
             if (realHandle < 0) {
+                DWORD err = NET_DVR_GetLastError();
                 qWarning("RealPlay failed for %s ch%d: error %d",
-                         dev.ip.toLatin1().constData(), channel, NET_DVR_GetLastError());
+                         dev.ip.toLatin1().constData(), channel, err);
+                m_frames[frameIdx]->setStatus(
+                    QString("%1  ch%2\n%3").arg(dev.ip).arg(channel)
+                        .arg(sdkErrorString(err, "").trimmed()));
             } else {
+                m_frames[frameIdx]->clearStatus();
                 m_streams.append({realHandle, userId});
-                frameIdx++;
             }
+            frameIdx++;
         }
     }
+
+    // Mark any leftover grid slots that have no configured source
+    for (; frameIdx < m_frames.size(); frameIdx++)
+        m_frames[frameIdx]->setStatus("No Source");
 }
 
 void LiveViewWindow::stopAllStreams()
