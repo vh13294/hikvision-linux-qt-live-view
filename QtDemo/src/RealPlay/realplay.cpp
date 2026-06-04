@@ -218,6 +218,8 @@ void RealPlay::OnSingleClickPlayWindow()
 {
     //who send the signal.
     CFramePlayWnd *pWnd = qobject_cast<CFramePlayWnd *>(sender());
+    if (pWnd == NULL)
+        return;
     if (pWnd != m_pSelectedPlayWnd)
     {
         m_pSelectedPlayWnd->setStyleSheet("border: 2px solid gray;");
@@ -623,9 +625,11 @@ int RealPlay::realPlayEncapseInterface(int devicerow, int channelrow, NET_DVR_CL
 	    }
 		i++;
 	}
+	if (it == (*m_qlistdevicetree).end())
+		return 0;
 	//���豸�ڵ��µ�ͨ���б���Ѱ��ͨ���ڵ�
 	int j = 0;
-	for ( it_channel= (*it).m_qlistchanneldata.begin(); 
+	for ( it_channel= (*it).m_qlistchanneldata.begin();
 		it_channel != (*it).m_qlistchanneldata.end(); ++it_channel)
 	{
 	    if (j == channelrow)
@@ -634,6 +638,8 @@ int RealPlay::realPlayEncapseInterface(int devicerow, int channelrow, NET_DVR_CL
 	    }
 		j++;
 	}
+	if (it_channel == (*it).m_qlistchanneldata.end())
+		return 0;
 
 	//����Ԥ���򿪵����ز���	
 	//clientinfo->lChannel = (*it_channel).getChannelNum();
@@ -715,14 +721,16 @@ int RealPlay::realPlayEncapseInterface(int devicerow, int channelrow, NET_DVR_CL
 
 			QModelIndex specialindex = m_rpmodelindex->child(channelrow,0);
 			item = (*m_rpmodel)->itemFromIndex(specialindex);
-			item->setIcon(QIcon(":/images/play.bmp"));
+			if (item != NULL)
+				item->setIcon(QIcon(":/images/play.bmp"));
 
-		}   
+		}
 		else if (nodetype == 3)
 		{
 			QModelIndex  parentindex = m_rpmodelindex->parent();
 			item = (*m_rpmodel)->itemFromIndex(parentindex.child(channelrow,0));
-			item->setIcon(QIcon(":/images/play.bmp"));
+			if (item != NULL)
+				item->setIcon(QIcon(":/images/play.bmp"));
 		}
 		return 1;
 	}
@@ -740,11 +748,15 @@ void RealPlay::stopRealPlayEncapseInterface()
 	{
 	    if (m_rpuseridbackup == (*it).getUsrID())
 	    {
-	    //QMessageBox::information(this,tr("stopRealPlayEncapseInterface"),tr("715 i=%1").arg(i));
 	        break;
 	    }
-		//QMessageBox::information(this,tr("stopRealPlayEncapseInterface"),tr("718 i=%1").arg(i));
 		i++;
+	}
+	if (it == (*m_qlistdevicetree).end())
+	{
+		m_rpfirstrealhandle = -1;
+		m_rpcurrentrealhandle = -1;
+		return;
 	}
 //QMessageBox::information(this,tr("stopRealPlayEncapseInterface"),tr("686"));
 	//���豸�ڵ��µ�ͨ���б���Ѱ��ͨ���ڵ�
@@ -760,7 +772,8 @@ void RealPlay::stopRealPlayEncapseInterface()
 
 			QModelIndex tmpindex = (*m_rpmodel)->index(0,0).child(i,0).child(j,0);
 			QStandardItem *item = (*m_rpmodel)->itemFromIndex(tmpindex);
-			item->setIcon(QIcon(":/images/camera.bmp"));
+			if (item != NULL)
+				item->setIcon(QIcon(":/images/camera.bmp"));
 
 	    }
 		j++;

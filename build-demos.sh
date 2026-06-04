@@ -77,6 +77,11 @@ if [ -z "$_use_sw_render" ]; then
     _virt="$(systemd-detect-virt 2>/dev/null || true)"
     if [ -n "$_virt" ] && [ "$_virt" != "none" ]; then
         _use_sw_render=1
+    elif ! ls /dev/dri/card* 2>/dev/null | grep -q .; then
+        # No DRI GPU device found — software rendering required.
+        # This catches KVM/VNC hosts where systemd-detect-virt is absent or
+        # reports "none" but no hardware GPU is exposed to the guest.
+        _use_sw_render=1
     else
         _use_sw_render=0
     fi
