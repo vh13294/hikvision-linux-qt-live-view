@@ -55,6 +55,7 @@ private:
     void stopAllStreams();
     bool attemptStream(const RetryEntry &e);
     void stopRawPlay(RawPlayCtx *ctx);
+    void applyHideOverlay(LONG userId, int channel);
 
     static constexpr int RETRY_STAGGER_MS  = 3000;
     static constexpr int RETRY_COOLDOWN_MS = 60000;

@@ -163,6 +163,31 @@ void LiveViewWindow::initSdk()
     NET_DVR_SetExceptionCallBack_V30(0, nullptr, exceptionCallback, nullptr);
 }
 
+void LiveViewWindow::applyHideOverlay(LONG userId, int channel)
+{
+    if (!m_config.hideVcaOverlay)
+        return;
+
+    DWORD returned = 0;
+
+    NET_DVR_PICCFG_V40 cfg40{};
+    cfg40.dwSize = sizeof(cfg40);
+    if (NET_DVR_GetDVRConfig(userId, NET_DVR_GET_PICCFG_V40, channel,
+                             &cfg40, sizeof(cfg40), &returned)) {
+        cfg40.struMotion.byEnableDisplay = 0;
+        NET_DVR_SetDVRConfig(userId, NET_DVR_SET_PICCFG_V40, channel, &cfg40, sizeof(cfg40));
+        return;
+    }
+
+    NET_DVR_PICCFG_V30 cfg30{};
+    cfg30.dwSize = sizeof(cfg30);
+    if (NET_DVR_GetDVRConfig(userId, NET_DVR_GET_PICCFG_V30, channel,
+                             &cfg30, sizeof(cfg30), &returned)) {
+        cfg30.struMotion.byEnableDisplay = 0;
+        NET_DVR_SetDVRConfig(userId, NET_DVR_SET_PICCFG_V30, channel, &cfg30, sizeof(cfg30));
+    }
+}
+
 bool LiveViewWindow::attemptStream(const RetryEntry &e)
 {
     NET_DVR_USER_LOGIN_INFO loginInfo{};
@@ -189,9 +214,9 @@ bool LiveViewWindow::attemptStream(const RetryEntry &e)
     previewInfo.dwDisplayBufNum = 1;
 
     RawPlayCtx *ctx = nullptr;
+    WId wid = m_frames[e.frameIdx]->videoWinId();
     if (m_config.renderRaw) {
         int port = -1;
-        WId wid = m_frames[e.frameIdx]->videoWinId();
         if (PlayM4_GetPort(&port)) {
             PlayM4_SetStreamOpenMode(port, STREAME_REALTIME);
             if (PlayM4_OpenStream(port, nullptr, 0, 1024 * 1024)) {
@@ -202,9 +227,13 @@ bool LiveViewWindow::attemptStream(const RetryEntry &e)
                 PlayM4_FreePort(port);
             }
         }
+    }
+    if (ctx) {
         // hPlayWnd stays NULL — PlayCtrl manages display via the callback
     } else {
-        previewInfo.hPlayWnd = (HWND)m_frames[e.frameIdx]->videoWinId();
+        // Raw path unavailable — apply device-side fallback and render normally
+        applyHideOverlay(userId, e.channel);
+        previewInfo.hPlayWnd = (HWND)wid;
     }
 
     LONG realHandle = NET_DVR_RealPlay_V40(userId, &previewInfo,
@@ -263,9 +292,9 @@ void LiveViewWindow::startAllStreams()
             previewInfo.dwDisplayBufNum = 1;
 
             RawPlayCtx *ctx = nullptr;
+            WId wid = m_frames[frameIdx]->videoWinId();
             if (m_config.renderRaw) {
                 int port = -1;
-                WId wid = m_frames[frameIdx]->videoWinId();
                 if (PlayM4_GetPort(&port)) {
                     PlayM4_SetStreamOpenMode(port, STREAME_REALTIME);
                     if (PlayM4_OpenStream(port, nullptr, 0, 1024 * 1024)) {
@@ -276,8 +305,13 @@ void LiveViewWindow::startAllStreams()
                         PlayM4_FreePort(port);
                     }
                 }
+            }
+            if (ctx) {
+                // hPlayWnd stays NULL — PlayCtrl manages display via the callback
             } else {
-                previewInfo.hPlayWnd = (HWND)m_frames[frameIdx]->videoWinId();
+                // Raw path unavailable — apply device-side fallback and render normally
+                applyHideOverlay(userId, channel);
+                previewInfo.hPlayWnd = (HWND)wid;
             }
 
             LONG realHandle = NET_DVR_RealPlay_V40(userId, &previewInfo,

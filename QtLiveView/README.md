@@ -44,6 +44,7 @@ Edit `config/DeviceConfig.json` next to the binary before running.
 | `monitorIndex` | int | Monitor index to display on (0 = primary) |
 | `gridSize` | int | Grid size — `2` = 2×2, `3` = 3×3, `4` = 4×4 |
 | `renderRaw` | bool | Bypass HCPreview pipeline: raw callback → PlayCtrl decode (no overlays, phone unaffected) |
+| `hideVcaOverlay` | bool | Fallback: disable motion display on the device via `NET_DVR_SetDVRConfig` (persistent, affects all clients) |
 
 ### Device fields
 
@@ -82,6 +83,19 @@ When `true`, each stream bypasses the Hikvision HCPreview rendering pipeline ent
 - No overlays of any kind — both smart detection boxes and device-side OSD are stripped.
 - PlayCtrl renders without the hardware-accelerated display path that HCPreview uses; performance is comparable but may differ on low-end hardware.
 - The device configuration is not touched — no persistent changes are made.
+
+**Fallback behaviour:** if PlayCtrl setup fails for a stream (e.g. `PlayM4_GetPort` or `PlayM4_OpenStream` returns an error), that stream falls back to normal HCPreview rendering. If `hideVcaOverlay` is also `true`, the device-side config is applied for that stream before falling back, suppressing the overlay at the source.
+
+## hideVcaOverlay
+
+Fallback mode for when `renderRaw` is unavailable or fails. When `true`, the app reads the full channel picture config from the device via `NET_DVR_GetDVRConfig` (`NET_DVR_PICCFG_V40`, falling back to `NET_DVR_PICCFG_V30`), sets `struMotion.byEnableDisplay = 0`, and writes it back with `NET_DVR_SetDVRConfig`.
+
+**Important notes:**
+- This is a **persistent device setting** — it remains in effect until changed back, even after the app closes.
+- Because the overlay is disabled at the source, **all clients** (Hik-Connect, iVMS, web browser) will see raw video without motion detection boxes. Push notifications and event recordings are unaffected.
+- When connecting to an NVR IP, the setting is applied per channel through the NVR — no need to connect to individual cameras.
+- Set back to `false` and restart the app to restore the display on the device.
+- Motion detection itself (alerts, recordings) continues to run normally — only the visual display is suppressed.
 
 ## Controls
 
