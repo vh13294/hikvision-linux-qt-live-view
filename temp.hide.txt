@@ -1,0 +1,10 @@
+## hideVcaOverlay
+
+When `true`, the app reads the full channel picture config from the device via `NET_DVR_GetDVRConfig` (`NET_DVR_PICCFG_V40`, falling back to `NET_DVR_PICCFG_V30`), sets `struMotion.byEnableDisplay = 0`, and writes it back with `NET_DVR_SetDVRConfig`. This disables the motion detection grid/bounding-box display at the device level.
+
+**Important notes:**
+- This is a **persistent device setting** — it remains in effect until changed back, even after the app closes.
+- Because the overlay is disabled at the source, **all clients** (Hik-Connect, iVMS, web browser) will see raw video without motion detection boxes. Push notifications and event recordings are unaffected.
+- When connecting to an NVR IP, the setting is applied per channel through the NVR — no need to connect to individual cameras.
+- Set back to `false` and restart the app to restore the display on the device.
+- Enable/disable applies only to the visual display of detected areas — motion detection itself (alerts, recordings) continues to run normally.

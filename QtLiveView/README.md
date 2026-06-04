@@ -43,7 +43,7 @@ Edit `config/DeviceConfig.json` next to the binary before running.
 |---|---|---|
 | `monitorIndex` | int | Monitor index to display on (0 = primary) |
 | `gridSize` | int | Grid size — `2` = 2×2, `3` = 3×3, `4` = 4×4 |
-| `hideVcaOverlay` | bool | Remove smart tracking/event boxes from all streams (see below) |
+| `renderRaw` | bool | Bypass HCPreview pipeline: raw callback → PlayCtrl decode (no overlays, phone unaffected) |
 
 ### Device fields
 
@@ -67,15 +67,21 @@ Add more objects to the `devices` array. Channels fill the grid left-to-right, t
 ]
 ```
 
-## hideVcaOverlay
+## renderRaw
 
-When `true`, the app calls `NET_DVR_SetVCADrawMode` on each channel after login to instruct the device to stop burning smart overlay boxes (motion tracking, vehicle detection, line crossing, etc.) into the encoded video stream.
+When `true`, each stream bypasses the Hikvision HCPreview rendering pipeline entirely. Instead of passing `hPlayWnd` to the SDK, the app receives the raw encoded stream via a data callback and feeds it directly into PlayCtrl (`libPlayCtrl.so`) for decode and display.
 
-**Important notes:**
-- This is a persistent camera/NVR setting — it remains active until changed back, even after the app closes.
-- Because the overlay is removed at the source, **all clients** (Hik-Connect, iVMS, web browser) will see raw video without boxes. Push notifications and event recordings are unaffected.
-- When connecting to an NVR IP, the setting is applied per channel (camera) through the NVR — no need to connect to individual cameras.
-- Set back to `false` and restart the app to restore overlays on the device.
+**Result:** no smart overlays (motion grid, tracking boxes, event markers) are visible on screen. The phone app, Hik-Connect, and any other client are completely unaffected because this is a client-side change only.
+
+**How it works:**
+1. `NET_DVR_RealPlay_V40` is called with `hPlayWnd = NULL` and `rawDataCallback` as the data callback.
+2. On the first `NET_DVR_SYSHEAD` packet, the callback calls `PlayM4_OpenStream` and `PlayM4_Play` to start the PlayCtrl decoder on the frame's window.
+3. Subsequent `NET_DVR_STREAMDATA` packets are fed via `PlayM4_InputData` — PlayCtrl decodes and renders them directly with no overlay pipeline.
+
+**Trade-offs vs default mode:**
+- No overlays of any kind — both smart detection boxes and device-side OSD are stripped.
+- PlayCtrl renders without the hardware-accelerated display path that HCPreview uses; performance is comparable but may differ on low-end hardware.
+- The device configuration is not touched — no persistent changes are made.
 
 ## Controls
 

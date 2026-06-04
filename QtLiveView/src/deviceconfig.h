@@ -18,7 +18,7 @@ struct DeviceEntry {
 struct AppConfig {
     int monitorIndex;  // which monitor index to use
     int gridSize;      // grid dimension: 1=1x1, 2=2x2, 3=3x3, 4=4x4
-    bool hideVcaOverlay;  // disable smart tracking/event boxes burned into stream
+    bool renderRaw;       // bypass HCPreview pipeline: raw callback → PlayCtrl (no overlays, phone unaffected)
     QList<DeviceEntry> devices;
     bool valid;
 };
@@ -28,7 +28,7 @@ inline AppConfig loadConfig(const QString &path)
     AppConfig cfg{};
     cfg.monitorIndex = 0;
     cfg.gridSize     = 1;
-    cfg.hideVcaOverlay = false;
+    cfg.renderRaw = false;
     cfg.valid          = false;
 
     QFile file(path);
@@ -43,7 +43,7 @@ inline AppConfig loadConfig(const QString &path)
     QJsonObject root = doc.object();
     cfg.monitorIndex = root["monitorIndex"].toInt(0);
     cfg.gridSize     = root["gridSize"].toInt(1);
-    cfg.hideVcaOverlay = root["hideVcaOverlay"].toBool(false);
+    cfg.renderRaw = root["renderRaw"].toBool(false);
 
     for (const QJsonValue &dv : root["devices"].toArray()) {
         QJsonObject d = dv.toObject();

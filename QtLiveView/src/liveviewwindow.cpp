@@ -60,6 +60,37 @@ static void CALLBACK exceptionCallback(DWORD dwType, LONG /*lUserID*/, LONG lHan
     }
 }
 
+// Called on an SDK-internal thread. Feeds raw encoded data directly into
+// PlayCtrl, bypassing the HCPreview smart-overlay rendering pipeline.
+void CALLBACK LiveViewWindow::rawDataCallback(LONG /*lPlayHandle*/, DWORD dwDataType,
+                                              BYTE *pBuffer, DWORD dwBufSize, void *pUser)
+{
+    auto *ctx = static_cast<RawPlayCtx *>(pUser);
+    if (!ctx || ctx->port < 0)
+        return;
+
+    if (dwDataType == NET_DVR_SYSHEAD) {
+        PlayM4_SetStreamOpenMode(ctx->port, STREAME_REALTIME);
+        if (PlayM4_OpenStream(ctx->port, pBuffer, dwBufSize, SOURCE_BUF_MIN)) {
+            PlayM4_Play(ctx->port, static_cast<PLAYM4_HWND>(ctx->wid));
+            ctx->opened = true;
+        }
+    } else if (dwDataType == NET_DVR_STREAMDATA && ctx->opened) {
+        PlayM4_InputData(ctx->port, pBuffer, dwBufSize);
+    }
+}
+
+void LiveViewWindow::stopRawPlay(RawPlayCtx *ctx)
+{
+    if (!ctx) return;
+    if (ctx->opened) {
+        PlayM4_Stop(ctx->port);
+        PlayM4_CloseStream(ctx->port);
+    }
+    PlayM4_FreePort(ctx->port);
+    delete ctx;
+}
+
 LiveViewWindow::LiveViewWindow(QWidget *parent)
     : QMainWindow(parent)
     , m_central(new QWidget(this))
@@ -142,15 +173,16 @@ void LiveViewWindow::initSdk()
     NET_DVR_SetExceptionCallBack_V30(0, nullptr, exceptionCallback, nullptr);
 }
 
-void LiveViewWindow::applyVcaDrawMode(LONG userId, int channel)
+// Returns a heap-allocated RawPlayCtx with a free PlayCtrl port, or nullptr on failure.
+static LiveViewWindow::RawPlayCtx *allocRawCtx(WId wid)
 {
-    if (!m_config.hideVcaOverlay)
-        return;
-    NET_VCA_DRAW_MODE drawMode{};
-    drawMode.dwSize         = sizeof(drawMode);
-    drawMode.byDspAddTarget = 0;
-    drawMode.byDspAddRule   = 0;
-    NET_DVR_SetVCADrawMode(userId, channel, &drawMode);
+    int port = -1;
+    if (!PlayM4_GetPort(&port))
+        return nullptr;
+    auto *ctx = new LiveViewWindow::RawPlayCtx;
+    ctx->port = port;
+    ctx->wid  = wid;
+    return ctx;
 }
 
 bool LiveViewWindow::attemptStream(const RetryEntry &e)
@@ -172,26 +204,34 @@ bool LiveViewWindow::attemptStream(const RetryEntry &e)
         return false;
     }
 
-    applyVcaDrawMode(userId, e.channel);
-
     NET_DVR_PREVIEWINFO previewInfo{};
     previewInfo.lChannel        = e.channel;
     previewInfo.dwLinkMode      = e.device.streamType;
-    previewInfo.hPlayWnd        = (HWND)m_frames[e.frameIdx]->videoWinId();
     previewInfo.bBlocked        = 1;
     previewInfo.dwDisplayBufNum = 1;
 
-    LONG realHandle = NET_DVR_RealPlay_V40(userId, &previewInfo, nullptr, nullptr);
+    RawPlayCtx *ctx = nullptr;
+    if (m_config.renderRaw) {
+        ctx = allocRawCtx(m_frames[e.frameIdx]->videoWinId());
+        // hPlayWnd stays NULL — PlayCtrl takes over display via the callback
+    } else {
+        previewInfo.hPlayWnd = (HWND)m_frames[e.frameIdx]->videoWinId();
+    }
+
+    LONG realHandle = NET_DVR_RealPlay_V40(userId, &previewInfo,
+                                           m_config.renderRaw ? rawDataCallback : nullptr,
+                                           ctx);
     if (realHandle < 0) {
         m_frames[e.frameIdx]->setStatus(
             QString("%1  ch%2\n%3").arg(e.device.ip).arg(e.channel)
                 .arg(sdkErrorString(NET_DVR_GetLastError(), "").trimmed()));
         NET_DVR_Logout_V30(userId);
+        stopRawPlay(ctx);
         return false;
     }
 
     m_frames[e.frameIdx]->clearStatus();
-    m_streams.append({realHandle, userId, e});
+    m_streams.append({realHandle, userId, e, ctx});
     m_userIds.append(userId);
     return true;
 }
@@ -227,25 +267,32 @@ void LiveViewWindow::startAllStreams()
             if (frameIdx >= m_frames.size())
                 break;
 
-            applyVcaDrawMode(userId, channel);
-
             NET_DVR_PREVIEWINFO previewInfo{};
             previewInfo.lChannel        = channel;
             previewInfo.dwLinkMode      = dev.streamType;
-            previewInfo.hPlayWnd        = (HWND)m_frames[frameIdx]->videoWinId();
             previewInfo.bBlocked        = 1;
             previewInfo.dwDisplayBufNum = 1;
 
-            LONG realHandle = NET_DVR_RealPlay_V40(userId, &previewInfo, nullptr, nullptr);
+            RawPlayCtx *ctx = nullptr;
+            if (m_config.renderRaw) {
+                ctx = allocRawCtx(m_frames[frameIdx]->videoWinId());
+            } else {
+                previewInfo.hPlayWnd = (HWND)m_frames[frameIdx]->videoWinId();
+            }
+
+            LONG realHandle = NET_DVR_RealPlay_V40(userId, &previewInfo,
+                                                   m_config.renderRaw ? rawDataCallback : nullptr,
+                                                   ctx);
             if (realHandle < 0) {
                 DWORD err = NET_DVR_GetLastError();
                 m_frames[frameIdx]->setStatus(
                     QString("%1  ch%2\n%3").arg(dev.ip).arg(channel)
                         .arg(sdkErrorString(err, "").trimmed()));
+                stopRawPlay(ctx);
                 m_retryQueue.append({dev, channel, frameIdx});
             } else {
                 m_frames[frameIdx]->clearStatus();
-                m_streams.append({realHandle, userId, {dev, channel, frameIdx}});
+                m_streams.append({realHandle, userId, {dev, channel, frameIdx}, ctx});
             }
             frameIdx++;
         }
@@ -286,7 +333,8 @@ void LiveViewWindow::onStreamDropped(long realHandle)
         if (m_streams[i].realHandle == static_cast<LONG>(realHandle)) {
             StreamHandle sh = m_streams.takeAt(i);
 
-            NET_DVR_StopRealPlay(sh.realHandle);
+            NET_DVR_StopRealPlay(sh.realHandle);  // guaranteed to stop the callback before returning
+            stopRawPlay(sh.rawCtx);
             NET_DVR_Logout_V30(sh.userId);
             m_userIds.removeOne(sh.userId);
 
@@ -336,8 +384,10 @@ void LiveViewWindow::stopAllStreams()
     m_retryTimer->stop();
     m_retryQueue.clear();
 
-    for (const StreamHandle &sh : m_streams)
-        NET_DVR_StopRealPlay(sh.realHandle);
+    for (const StreamHandle &sh : m_streams) {
+        NET_DVR_StopRealPlay(sh.realHandle);  // stops callback before returning
+        stopRawPlay(sh.rawCtx);
+    }
     m_streams.clear();
 
     for (LONG userId : m_userIds)

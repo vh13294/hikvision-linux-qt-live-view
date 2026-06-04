@@ -12,7 +12,8 @@ SOURCES += src/main.cpp          \
            src/liveviewwindow.cpp
 
 INCLUDEPATH += src/ \
-               ../incEn
+               ../incEn \
+               ../QtDemo/includeCn
 
 unix {
     LIBS += -lhcnetsdk -lPlayCtrl -lAudioRender -lSuperRender
