@@ -173,18 +173,6 @@ void LiveViewWindow::initSdk()
     NET_DVR_SetExceptionCallBack_V30(0, nullptr, exceptionCallback, nullptr);
 }
 
-// Returns a heap-allocated RawPlayCtx with a free PlayCtrl port, or nullptr on failure.
-static LiveViewWindow::RawPlayCtx *allocRawCtx(WId wid)
-{
-    int port = -1;
-    if (!PlayM4_GetPort(&port))
-        return nullptr;
-    auto *ctx = new LiveViewWindow::RawPlayCtx;
-    ctx->port = port;
-    ctx->wid  = wid;
-    return ctx;
-}
-
 bool LiveViewWindow::attemptStream(const RetryEntry &e)
 {
     NET_DVR_USER_LOGIN_INFO loginInfo{};
@@ -212,7 +200,10 @@ bool LiveViewWindow::attemptStream(const RetryEntry &e)
 
     RawPlayCtx *ctx = nullptr;
     if (m_config.renderRaw) {
-        ctx = allocRawCtx(m_frames[e.frameIdx]->videoWinId());
+        int port = -1;
+        if (PlayM4_GetPort(&port)) {
+            ctx = new RawPlayCtx{port, m_frames[e.frameIdx]->videoWinId(), false};
+        }
         // hPlayWnd stays NULL — PlayCtrl takes over display via the callback
     } else {
         previewInfo.hPlayWnd = (HWND)m_frames[e.frameIdx]->videoWinId();
@@ -275,7 +266,10 @@ void LiveViewWindow::startAllStreams()
 
             RawPlayCtx *ctx = nullptr;
             if (m_config.renderRaw) {
-                ctx = allocRawCtx(m_frames[frameIdx]->videoWinId());
+                int port = -1;
+                if (PlayM4_GetPort(&port)) {
+                    ctx = new RawPlayCtx{port, m_frames[frameIdx]->videoWinId(), false};
+                }
             } else {
                 previewInfo.hPlayWnd = (HWND)m_frames[frameIdx]->videoWinId();
             }
