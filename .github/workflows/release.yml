@@ -28,7 +28,10 @@ jobs:
       - name: Build Qt demo
         run: bash build-demos.sh qt
 
-      - name: Package binary
+      - name: Build Qt Live View
+        run: bash build-demos.sh liveview
+
+      - name: Package Qt demo
         run: |
           cd build/qt
           tar -czf ../../QtClientDemo-linux64.tar.gz \
@@ -37,8 +40,19 @@ jobs:
             lib/ \
             translation/
 
+      - name: Package Qt Live View
+        run: |
+          cd build/liveview
+          tar -czf ../../QtLiveView-linux64.tar.gz \
+            QtLiveView \
+            run.sh \
+            lib/ \
+            config/
+
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
-          files: QtClientDemo-linux64.tar.gz
+          files: |
+            QtClientDemo-linux64.tar.gz
+            QtLiveView-linux64.tar.gz
           generate_release_notes: true
