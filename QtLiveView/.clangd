@@ -6,6 +6,7 @@ CompileFlags:
     - -I/usr/include/x86_64-linux-gnu/qt5/QtCore
     - -I/workspace/sdk/incEn
     - -I/workspace/sdk/QtLiveView/src
+    - -I/workspace/sdk/QtDemo/includeCn
     - -DQT_WIDGETS_LIB
     - -DQT_GUI_LIB
     - -DQT_CORE_LIB

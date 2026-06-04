@@ -60,33 +60,23 @@ static void CALLBACK exceptionCallback(DWORD dwType, LONG /*lUserID*/, LONG lHan
     }
 }
 
-// Called on an SDK-internal thread. Feeds raw encoded data directly into
-// PlayCtrl, bypassing the HCPreview smart-overlay rendering pipeline.
+// Called on an SDK-internal thread. PlayCtrl is already open and playing
+// (set up on the main thread before NET_DVR_RealPlay_V40) — just feed data.
 void CALLBACK LiveViewWindow::rawDataCallback(LONG /*lPlayHandle*/, DWORD dwDataType,
                                               BYTE *pBuffer, DWORD dwBufSize, void *pUser)
 {
     auto *ctx = static_cast<RawPlayCtx *>(pUser);
     if (!ctx || ctx->port < 0)
         return;
-
-    if (dwDataType == NET_DVR_SYSHEAD) {
-        PlayM4_SetStreamOpenMode(ctx->port, STREAME_REALTIME);
-        if (PlayM4_OpenStream(ctx->port, pBuffer, dwBufSize, SOURCE_BUF_MIN)) {
-            PlayM4_Play(ctx->port, static_cast<PLAYM4_HWND>(ctx->wid));
-            ctx->opened = true;
-        }
-    } else if (dwDataType == NET_DVR_STREAMDATA && ctx->opened) {
+    if (dwDataType == NET_DVR_SYSHEAD || dwDataType == NET_DVR_STREAMDATA)
         PlayM4_InputData(ctx->port, pBuffer, dwBufSize);
-    }
 }
 
 void LiveViewWindow::stopRawPlay(RawPlayCtx *ctx)
 {
     if (!ctx) return;
-    if (ctx->opened) {
-        PlayM4_Stop(ctx->port);
-        PlayM4_CloseStream(ctx->port);
-    }
+    PlayM4_Stop(ctx->port);
+    PlayM4_CloseStream(ctx->port);
     PlayM4_FreePort(ctx->port);
     delete ctx;
 }
@@ -201,10 +191,18 @@ bool LiveViewWindow::attemptStream(const RetryEntry &e)
     RawPlayCtx *ctx = nullptr;
     if (m_config.renderRaw) {
         int port = -1;
+        WId wid = m_frames[e.frameIdx]->videoWinId();
         if (PlayM4_GetPort(&port)) {
-            ctx = new RawPlayCtx{port, m_frames[e.frameIdx]->videoWinId(), false};
+            PlayM4_SetStreamOpenMode(port, STREAME_REALTIME);
+            if (PlayM4_OpenStream(port, nullptr, 0, 1024 * 1024)) {
+                PlayM4_SetDisplayBuf(port, 6);
+                PlayM4_Play(port, static_cast<PLAYM4_HWND>(wid));
+                ctx = new RawPlayCtx{port, wid};
+            } else {
+                PlayM4_FreePort(port);
+            }
         }
-        // hPlayWnd stays NULL — PlayCtrl takes over display via the callback
+        // hPlayWnd stays NULL — PlayCtrl manages display via the callback
     } else {
         previewInfo.hPlayWnd = (HWND)m_frames[e.frameIdx]->videoWinId();
     }
@@ -267,8 +265,16 @@ void LiveViewWindow::startAllStreams()
             RawPlayCtx *ctx = nullptr;
             if (m_config.renderRaw) {
                 int port = -1;
+                WId wid = m_frames[frameIdx]->videoWinId();
                 if (PlayM4_GetPort(&port)) {
-                    ctx = new RawPlayCtx{port, m_frames[frameIdx]->videoWinId(), false};
+                    PlayM4_SetStreamOpenMode(port, STREAME_REALTIME);
+                    if (PlayM4_OpenStream(port, nullptr, 0, 1024 * 1024)) {
+                        PlayM4_SetDisplayBuf(port, 6);
+                        PlayM4_Play(port, static_cast<PLAYM4_HWND>(wid));
+                        ctx = new RawPlayCtx{port, wid};
+                    } else {
+                        PlayM4_FreePort(port);
+                    }
                 }
             } else {
                 previewInfo.hPlayWnd = (HWND)m_frames[frameIdx]->videoWinId();

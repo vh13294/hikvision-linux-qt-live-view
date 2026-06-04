@@ -36,9 +36,8 @@ private:
     };
 
     struct RawPlayCtx {
-        int  port   = -1;
-        WId  wid    = 0;
-        bool opened = false;
+        int port = -1;
+        WId wid  = 0;
     };
 
     struct StreamHandle {
