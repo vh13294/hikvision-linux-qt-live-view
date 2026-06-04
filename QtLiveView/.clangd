@@ -1,0 +1,11 @@
+CompileFlags:
+  Add:
+    - -I/usr/include/x86_64-linux-gnu/qt5
+    - -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets
+    - -I/usr/include/x86_64-linux-gnu/qt5/QtGui
+    - -I/usr/include/x86_64-linux-gnu/qt5/QtCore
+    - -I/workspace/sdk/incEn
+    - -I/workspace/sdk/QtLiveView/src
+    - -DQT_WIDGETS_LIB
+    - -DQT_GUI_LIB
+    - -DQT_CORE_LIB

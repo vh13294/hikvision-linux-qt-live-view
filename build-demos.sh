@@ -98,11 +98,59 @@ EOF
     echo "→ Output: $out/QtClientDemo  (run via $out/run.sh)"
 }
 
+# ── Qt Live View ───────────────────────────────────────────────────────────────
+build_liveview() {
+    echo "=== Building QtLiveView ==="
+    local out="$BUILD_BASE/liveview"
+    mkdir -p "$out"
+
+    cd "$out"
+    qmake -spec linux-g++ "$SDK/QtLiveView/QtLiveView.pro" \
+        QMAKE_LIBDIR+="$SDK/lib" \
+        QMAKE_RPATHDIR+="$SDK/lib:$SDK/lib/HCNetSDKCom" \
+        QMAKE_LFLAGS+="-Wl,-rpath,\\\$\$ORIGIN/lib,-rpath,\\\$\$ORIGIN/lib/HCNetSDKCom"
+    make -j"$(nproc)"
+    cp -r "$SDK/lib" "$out/"
+    mkdir -p "$out/config"
+    cp "$SDK/QtLiveView/config/DeviceConfig.json" "$out/config/"
+
+    if command -v patchelf >/dev/null 2>&1; then
+        patchelf --set-rpath '$ORIGIN' "$out/lib/libPlayCtrl.so"
+    fi
+
+    cat > "$out/run.sh" << 'EOF'
+#!/bin/bash
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export LD_LIBRARY_PATH="$DIR/lib:$DIR/lib/HCNetSDKCom${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+_use_sw_render="${HK_FORCE_SW_RENDER:-}"
+if [ -z "$_use_sw_render" ]; then
+    _virt="$(systemd-detect-virt 2>/dev/null || true)"
+    if [ -n "$_virt" ] && [ "$_virt" != "none" ]; then
+        _use_sw_render=1
+    elif ! ls /dev/dri/card* 2>/dev/null | grep -q .; then
+        _use_sw_render=1
+    else
+        _use_sw_render=0
+    fi
+fi
+if [ "$_use_sw_render" = "1" ]; then
+    export LIBGL_ALWAYS_SOFTWARE=1
+    export QT_X11_NO_MITSHM=1
+fi
+unset _use_sw_render _virt
+exec "$DIR/QtLiveView" "$@"
+EOF
+    chmod +x "$out/run.sh"
+    echo "→ Output: $out/QtLiveView  (run via $out/run.sh)"
+    echo "→ Edit  : $out/config/DeviceConfig.json before running"
+}
+
 case "$TARGET" in
-    console) build_console ;;
-    qt)      build_qt ;;
-    all)     build_console; build_qt ;;
-    *)       echo "Usage: $0 [qt|console|all]"; exit 1 ;;
+    console)   build_console ;;
+    qt)        build_qt ;;
+    liveview)  build_liveview ;;
+    all)       build_console; build_qt; build_liveview ;;
+    *)         echo "Usage: $0 [qt|console|liveview|all]"; exit 1 ;;
 esac
 
 echo "Done."

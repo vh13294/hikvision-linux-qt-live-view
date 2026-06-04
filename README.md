@@ -1,6 +1,6 @@
 # Hikvision HCNetSDK V6.1.9.4 — Linux 64-bit
 
-Network camera / DVR management SDK with Qt5 GUI demo, console demo, and Java Swing demo.  
+Network camera / DVR management SDK with Qt5 GUI demo and console demo.  
 Build date: **2022-04-12** | Architecture: **linux-x86_64**
 
 ---
@@ -72,15 +72,58 @@ bash build-demos.sh all
 # Qt GUI demo only
 bash build-demos.sh qt
 
+# Live view only
+bash build-demos.sh liveview
+
 # Console demo only
 bash build-demos.sh console
 ```
 
 | Demo | Output binary | GUI |
 |---|---|---|
+| QtLiveView | `build/liveview/QtLiveView` | Qt5 fullscreen grid |
 | QtDemo | `build/qt/QtClientDemo` | Qt5 |
 | consoleDemo | `build/console/lib/sdkTest` | None (CLI) |
-| LinuxJavaDemo | built via `ant build` | Java Swing |
+
+---
+
+## QtLiveView — Auto-start Live View
+
+A focused Qt5 app that reads a JSON config, logs into all configured cameras, and immediately starts streaming in a fullscreen grid — no manual interaction required. Mirrors the [hikvision-dotnet-sdk](https://github.com/vh13294/hikvision-dotnet-sdk) preview demo in C++/Qt.
+
+### Configuration
+
+Edit `build/liveview/config/DeviceConfig.json` before running:
+
+```json
+{
+  "displayScreen": 0,
+  "numberOfScreen": 2,
+  "devices": [
+    {
+      "ip": "192.168.1.100",
+      "port": 8000,
+      "username": "admin",
+      "password": "12345",
+      "streamType": 0,
+      "channels": [1, 2, 3, 4]
+    }
+  ]
+}
+```
+
+| Field | Description |
+|---|---|
+| `displayScreen` | Monitor index (0 = primary) |
+| `numberOfScreen` | Grid dimension: `1`=1×1, `2`=2×2, `3`=3×3, `4`=4×4 |
+| `streamType` | `0` = main stream, `1` = sub stream |
+| `channels` | List of channel numbers to display (NVR IP channels start at 33) |
+
+### Running
+
+```bash
+bash build/liveview/run.sh
+```
 
 ---
 

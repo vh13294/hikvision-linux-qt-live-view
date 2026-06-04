@@ -1,0 +1,14 @@
+{
+  "displayScreen": 0,
+  "numberOfScreen": 2,
+  "devices": [
+    {
+      "ip": "192.168.1.100",
+      "port": 8000,
+      "username": "admin",
+      "password": "12345",
+      "streamType": 0,
+      "channels": [1, 2, 3, 4]
+    }
+  ]
+}
