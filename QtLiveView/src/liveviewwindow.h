@@ -18,6 +18,9 @@ public:
     explicit LiveViewWindow(QWidget *parent = nullptr);
     ~LiveViewWindow();
 
+protected:
+    void keyPressEvent(QKeyEvent *event) override;
+
 private slots:
     void onRightClick();
 

@@ -2,6 +2,7 @@
 #include <QApplication>
 #include <QDebug>
 #include <QFile>
+#include <QKeyEvent>
 #include <QMessageBox>
 #include <QScreen>
 
@@ -171,6 +172,13 @@ void LiveViewWindow::stopAllStreams()
     for (LONG userId : m_userIds)
         NET_DVR_Logout_V30(userId);
     m_userIds.clear();
+}
+
+void LiveViewWindow::keyPressEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Escape)
+        QApplication::quit();
+    QMainWindow::keyPressEvent(event);
 }
 
 void LiveViewWindow::onRightClick()
