@@ -4,7 +4,11 @@
 #include <QFile>
 #include <QKeyEvent>
 #include <QMessageBox>
+#include <QMetaObject>
 #include <QScreen>
+
+// Global pointer so the static SDK callback can reach the window instance.
+static LiveViewWindow *g_window = nullptr;
 
 static QString sdkErrorString(DWORD code, const QString &ip)
 {
@@ -28,11 +32,42 @@ static QString sdkErrorString(DWORD code, const QString &ip)
     return QString("%1\n%2").arg(ip, desc);
 }
 
+// Fires on an SDK-internal thread — must not touch Qt objects directly.
+static void CALLBACK exceptionCallback(DWORD dwType, LONG /*lUserID*/, LONG lHandle, void * /*pUser*/)
+{
+    if (!g_window) return;
+    const long handle = static_cast<long>(lHandle);
+
+    switch (dwType) {
+    case EXCEPTION_PREVIEW:
+    case EXCEPTION_RECONNECT:
+        // SDK is handling reconnect internally — just update the status label.
+        QMetaObject::invokeMethod(g_window, "onStreamReconnecting",
+                                  Qt::QueuedConnection, Q_ARG(long, handle));
+        break;
+    case PREVIEW_RECONNECTSUCCESS:
+        QMetaObject::invokeMethod(g_window, "onStreamReconnected",
+                                  Qt::QueuedConnection, Q_ARG(long, handle));
+        break;
+    case EXCEPTION_RELOGIN_FAILED:
+    case EXCEPTION_PREVIEW_RECONNECT_CLOSED:
+        // SDK gave up — stop the dead handle and queue a manual retry.
+        QMetaObject::invokeMethod(g_window, "onStreamDropped",
+                                  Qt::QueuedConnection, Q_ARG(long, handle));
+        break;
+    default:
+        break;
+    }
+}
+
 LiveViewWindow::LiveViewWindow(QWidget *parent)
     : QMainWindow(parent)
     , m_central(new QWidget(this))
     , m_grid(new QGridLayout(m_central))
+    , m_retryTimer(new QTimer(this))
 {
+    g_window = this;
+
     m_config = loadConfig("./config/DeviceConfig.json");
     if (!m_config.valid) {
         QMessageBox::critical(this, "Config Error",
@@ -47,17 +82,19 @@ LiveViewWindow::LiveViewWindow(QWidget *parent)
     m_grid->setContentsMargins(0, 0, 0, 0);
 
     int cols = qBound(1, m_config.numberOfScreen, 4);
-    int rows = cols;
-    for (int i = 0; i < rows * cols; i++) {
+    for (int i = 0; i < cols * cols; i++) {
         VideoFrame *frame = new VideoFrame(m_central);
         connect(frame, &VideoFrame::rightClicked, this, &LiveViewWindow::onRightClick);
         m_frames.append(frame);
         m_grid->addWidget(frame, i / cols, i % cols);
     }
 
+    m_retryTimer->setSingleShot(false);
+    m_retryTimer->setInterval(RETRY_STAGGER_MS);
+    connect(m_retryTimer, &QTimer::timeout, this, &LiveViewWindow::retryNext);
+
     initSdk();
 
-    // Place window on the configured screen
     QList<QScreen*> screens = QApplication::screens();
     int screenIdx = qBound(0, m_config.displayScreen, screens.size() - 1);
     setGeometry(screens[screenIdx]->geometry());
@@ -68,14 +105,14 @@ LiveViewWindow::LiveViewWindow(QWidget *parent)
 
 LiveViewWindow::~LiveViewWindow()
 {
+    g_window = nullptr;
+    m_retryTimer->stop();
     stopAllStreams();
     NET_DVR_Cleanup();
 }
 
 void LiveViewWindow::initSdk()
 {
-    // Tell the SDK where its component and crypto libraries live.
-    // Without this, HPR_LoadDso fails to locate libPlayCtrl.so siblings at runtime.
     QString exePath = QFile::symLinkTarget("/proc/self/exe");
     QString libDir  = exePath.left(exePath.lastIndexOf('/')) + "/lib";
 
@@ -102,6 +139,48 @@ void LiveViewWindow::initSdk()
 
     NET_DVR_SetLogToFile(3, const_cast<char*>("./sdkLog"), false);
     NET_DVR_SetConnectTime(10000, 1);
+    NET_DVR_SetExceptionCallBack_V30(0, nullptr, exceptionCallback, nullptr);
+}
+
+bool LiveViewWindow::attemptStream(const RetryEntry &e)
+{
+    NET_DVR_USER_LOGIN_INFO loginInfo{};
+    NET_DVR_DEVICEINFO_V40  deviceInfoV40{};
+    loginInfo.bUseAsynLogin = false;
+    loginInfo.wPort         = e.device.port;
+    strncpy(loginInfo.sDeviceAddress, e.device.ip.toLatin1().constData(),
+            sizeof(loginInfo.sDeviceAddress) - 1);
+    strncpy(loginInfo.sUserName, e.device.username.toLatin1().constData(),
+            sizeof(loginInfo.sUserName) - 1);
+    strncpy(loginInfo.sPassword, e.device.password.toLatin1().constData(),
+            sizeof(loginInfo.sPassword) - 1);
+
+    LONG userId = NET_DVR_Login_V40(&loginInfo, &deviceInfoV40);
+    if (userId < 0) {
+        m_frames[e.frameIdx]->setStatus(sdkErrorString(NET_DVR_GetLastError(), e.device.ip));
+        return false;
+    }
+
+    NET_DVR_PREVIEWINFO previewInfo{};
+    previewInfo.lChannel        = e.channel;
+    previewInfo.dwLinkMode      = e.device.streamType;
+    previewInfo.hPlayWnd        = (HWND)m_frames[e.frameIdx]->videoWinId();
+    previewInfo.bBlocked        = 1;
+    previewInfo.dwDisplayBufNum = 1;
+
+    LONG realHandle = NET_DVR_RealPlay_V40(userId, &previewInfo, nullptr, nullptr);
+    if (realHandle < 0) {
+        m_frames[e.frameIdx]->setStatus(
+            QString("%1  ch%2\n%3").arg(e.device.ip).arg(e.channel)
+                .arg(sdkErrorString(NET_DVR_GetLastError(), "").trimmed()));
+        NET_DVR_Logout_V30(userId);
+        return false;
+    }
+
+    m_frames[e.frameIdx]->clearStatus();
+    m_streams.append({realHandle, userId, e});
+    m_userIds.append(userId);
+    return true;
 }
 
 void LiveViewWindow::startAllStreams()
@@ -109,8 +188,8 @@ void LiveViewWindow::startAllStreams()
     int frameIdx = 0;
 
     for (const DeviceEntry &dev : m_config.devices) {
-        NET_DVR_USER_LOGIN_INFO  loginInfo{};
-        NET_DVR_DEVICEINFO_V40   deviceInfoV40{};
+        NET_DVR_USER_LOGIN_INFO loginInfo{};
+        NET_DVR_DEVICEINFO_V40  deviceInfoV40{};
         loginInfo.bUseAsynLogin = false;
         loginInfo.wPort         = dev.port;
         strncpy(loginInfo.sDeviceAddress, dev.ip.toLatin1().constData(),
@@ -123,10 +202,10 @@ void LiveViewWindow::startAllStreams()
         LONG userId = NET_DVR_Login_V40(&loginInfo, &deviceInfoV40);
         if (userId < 0) {
             DWORD err = NET_DVR_GetLastError();
-            qWarning("Login failed for %s: error %d", dev.ip.toLatin1().constData(), err);
-            // Mark all frames this device would have occupied
-            for (int i = 0; i < dev.channels.size() && frameIdx < m_frames.size(); i++, frameIdx++)
+            for (int i = 0; i < dev.channels.size() && frameIdx < m_frames.size(); i++, frameIdx++) {
                 m_frames[frameIdx]->setStatus(sdkErrorString(err, dev.ip));
+                m_retryQueue.append({dev, dev.channels[i], frameIdx});
+            }
             continue;
         }
         m_userIds.append(userId);
@@ -145,26 +224,103 @@ void LiveViewWindow::startAllStreams()
             LONG realHandle = NET_DVR_RealPlay_V40(userId, &previewInfo, nullptr, nullptr);
             if (realHandle < 0) {
                 DWORD err = NET_DVR_GetLastError();
-                qWarning("RealPlay failed for %s ch%d: error %d",
-                         dev.ip.toLatin1().constData(), channel, err);
                 m_frames[frameIdx]->setStatus(
                     QString("%1  ch%2\n%3").arg(dev.ip).arg(channel)
                         .arg(sdkErrorString(err, "").trimmed()));
+                m_retryQueue.append({dev, channel, frameIdx});
             } else {
                 m_frames[frameIdx]->clearStatus();
-                m_streams.append({realHandle, userId});
+                m_streams.append({realHandle, userId, {dev, channel, frameIdx}});
             }
             frameIdx++;
         }
     }
 
-    // Mark any leftover grid slots that have no configured source
     for (; frameIdx < m_frames.size(); frameIdx++)
         m_frames[frameIdx]->setStatus("No Source");
+
+    if (!m_retryQueue.isEmpty())
+        scheduleRetry();
+}
+
+void LiveViewWindow::onStreamReconnecting(long realHandle)
+{
+    for (const StreamHandle &sh : m_streams) {
+        if (sh.realHandle == static_cast<LONG>(realHandle)) {
+            m_frames[sh.entry.frameIdx]->setStatus(
+                QString("%1\nReconnecting...").arg(sh.entry.device.ip));
+            return;
+        }
+    }
+}
+
+void LiveViewWindow::onStreamReconnected(long realHandle)
+{
+    for (const StreamHandle &sh : m_streams) {
+        if (sh.realHandle == static_cast<LONG>(realHandle)) {
+            m_frames[sh.entry.frameIdx]->clearStatus();
+            return;
+        }
+    }
+}
+
+// Called only when the SDK has given up reconnecting.
+void LiveViewWindow::onStreamDropped(long realHandle)
+{
+    for (int i = 0; i < m_streams.size(); i++) {
+        if (m_streams[i].realHandle == static_cast<LONG>(realHandle)) {
+            StreamHandle sh = m_streams.takeAt(i);
+
+            NET_DVR_StopRealPlay(sh.realHandle);
+            NET_DVR_Logout_V30(sh.userId);
+            m_userIds.removeOne(sh.userId);
+
+            m_frames[sh.entry.frameIdx]->setStatus(
+                sdkErrorString(7 /*NET_DVR_NETWORK_FAIL_CONNECT*/, sh.entry.device.ip));
+
+            // Only queue if not already waiting for retry
+            bool alreadyQueued = false;
+            for (const RetryEntry &re : m_retryQueue) {
+                if (re.frameIdx == sh.entry.frameIdx) { alreadyQueued = true; break; }
+            }
+            if (!alreadyQueued)
+                m_retryQueue.append(sh.entry);
+
+            if (!m_retryTimer->isActive())
+                scheduleRetry();
+            return;
+        }
+    }
+}
+
+void LiveViewWindow::scheduleRetry()
+{
+    if (m_retryQueue.isEmpty())
+        return;
+    m_retryPos = 0;
+    m_retryTimer->start();
+}
+
+void LiveViewWindow::retryNext()
+{
+    if (m_retryPos >= m_retryQueue.size()) {
+        m_retryTimer->stop();
+        QTimer::singleShot(RETRY_COOLDOWN_MS, this, &LiveViewWindow::scheduleRetry);
+        return;
+    }
+
+    const RetryEntry entry = m_retryQueue[m_retryPos];
+    if (attemptStream(entry))
+        m_retryQueue.removeAt(m_retryPos);
+    else
+        m_retryPos++;
 }
 
 void LiveViewWindow::stopAllStreams()
 {
+    m_retryTimer->stop();
+    m_retryQueue.clear();
+
     for (const StreamHandle &sh : m_streams)
         NET_DVR_StopRealPlay(sh.realHandle);
     m_streams.clear();
