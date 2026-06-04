@@ -66,6 +66,27 @@ build_qt() {
 #!/bin/bash
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export LD_LIBRARY_PATH="$DIR/lib:$DIR/lib/HCNetSDKCom${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+
+# On KVM/VNC hosts there is no hardware GPU, so libSuperRender.so (which uses
+# OpenGL/GLX internally) crashes when the first video frame arrives.  Detect
+# this and fall back to Mesa software rendering automatically.
+# Override by setting HK_FORCE_SW_RENDER=0 (skip) or =1 (force) explicitly.
+_use_sw_render="${HK_FORCE_SW_RENDER:-}"
+if [ -z "$_use_sw_render" ]; then
+    # systemd-detect-virt exits 0 and prints a non-"none" token when in a VM
+    _virt="$(systemd-detect-virt 2>/dev/null || true)"
+    if [ -n "$_virt" ] && [ "$_virt" != "none" ]; then
+        _use_sw_render=1
+    else
+        _use_sw_render=0
+    fi
+fi
+if [ "$_use_sw_render" = "1" ]; then
+    export LIBGL_ALWAYS_SOFTWARE=1
+    export QT_X11_NO_MITSHM=1
+fi
+unset _use_sw_render _virt
+
 exec "$DIR/QtClientDemo" "$@"
 EOF
     chmod +x "$out/run.sh"
