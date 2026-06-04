@@ -27,6 +27,7 @@ LiveViewWindow::LiveViewWindow(QWidget *parent)
     int rows = cols;
     for (int i = 0; i < rows * cols; i++) {
         VideoFrame *frame = new VideoFrame(m_central);
+        connect(frame, &VideoFrame::rightClicked, this, &LiveViewWindow::onRightClick);
         m_frames.append(frame);
         m_grid->addWidget(frame, i / cols, i % cols);
     }
@@ -136,4 +137,11 @@ void LiveViewWindow::stopAllStreams()
     for (LONG userId : m_userIds)
         NET_DVR_Logout_V30(userId);
     m_userIds.clear();
+}
+
+void LiveViewWindow::onRightClick()
+{
+    m_rightClickCount++;
+    if (m_rightClickCount >= 2)
+        QApplication::quit();
 }

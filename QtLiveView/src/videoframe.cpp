@@ -1,4 +1,5 @@
 #include "videoframe.h"
+#include <QMouseEvent>
 #include <QResizeEvent>
 
 VideoFrame::VideoFrame(QWidget *parent)
@@ -18,4 +19,11 @@ WId VideoFrame::videoWinId() const
 void VideoFrame::resizeEvent(QResizeEvent *event)
 {
     m_playArea->resize(event->size().width() - 2, event->size().height() - 2);
+}
+
+void VideoFrame::mousePressEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::RightButton)
+        emit rightClicked();
+    QFrame::mousePressEvent(event);
 }

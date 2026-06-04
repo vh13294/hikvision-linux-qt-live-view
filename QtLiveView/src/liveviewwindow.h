@@ -18,6 +18,9 @@ public:
     explicit LiveViewWindow(QWidget *parent = nullptr);
     ~LiveViewWindow();
 
+private slots:
+    void onRightClick();
+
 private:
     void initSdk();
     void startAllStreams();
@@ -29,4 +32,5 @@ private:
     QVector<VideoFrame*> m_frames;
     QVector<StreamHandle> m_streams;
     QVector<LONG>        m_userIds;
+    int                  m_rightClickCount = 0;
 };

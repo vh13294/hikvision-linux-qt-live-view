@@ -10,8 +10,12 @@ public:
     explicit VideoFrame(QWidget *parent = nullptr);
     WId videoWinId() const;
 
+signals:
+    void rightClicked();
+
 protected:
     void resizeEvent(QResizeEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
 
 private:
     QFrame *m_playArea;
