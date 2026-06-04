@@ -1,6 +1,7 @@
 {
-  "displayScreen": 0,
-  "numberOfScreen": 2,
+  "monitorIndex": 0,
+  "gridSize": 2,
+  "hideVcaOverlay": false,
   "devices": [
     {
       "ip": "192.168.1.100",

@@ -16,8 +16,9 @@ struct DeviceEntry {
 };
 
 struct AppConfig {
-    int displayScreen;    // which monitor index to use
-    int numberOfScreen;   // grid dimension: 1=1x1, 2=2x2, 3=3x3, 4=4x4
+    int monitorIndex;  // which monitor index to use
+    int gridSize;      // grid dimension: 1=1x1, 2=2x2, 3=3x3, 4=4x4
+    bool hideVcaOverlay;  // disable smart tracking/event boxes burned into stream
     QList<DeviceEntry> devices;
     bool valid;
 };
@@ -25,8 +26,9 @@ struct AppConfig {
 inline AppConfig loadConfig(const QString &path)
 {
     AppConfig cfg{};
-    cfg.displayScreen  = 0;
-    cfg.numberOfScreen = 1;
+    cfg.monitorIndex = 0;
+    cfg.gridSize     = 1;
+    cfg.hideVcaOverlay = false;
     cfg.valid          = false;
 
     QFile file(path);
@@ -39,8 +41,9 @@ inline AppConfig loadConfig(const QString &path)
         return cfg;
 
     QJsonObject root = doc.object();
-    cfg.displayScreen  = root["displayScreen"].toInt(0);
-    cfg.numberOfScreen = root["numberOfScreen"].toInt(1);
+    cfg.monitorIndex = root["monitorIndex"].toInt(0);
+    cfg.gridSize     = root["gridSize"].toInt(1);
+    cfg.hideVcaOverlay = root["hideVcaOverlay"].toBool(false);
 
     for (const QJsonValue &dv : root["devices"].toArray()) {
         QJsonObject d = dv.toObject();

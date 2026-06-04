@@ -81,7 +81,7 @@ LiveViewWindow::LiveViewWindow(QWidget *parent)
     m_grid->setSpacing(0);
     m_grid->setContentsMargins(0, 0, 0, 0);
 
-    int cols = qBound(1, m_config.numberOfScreen, 4);
+    int cols = qBound(1, m_config.gridSize, 4);
     for (int i = 0; i < cols * cols; i++) {
         VideoFrame *frame = new VideoFrame(m_central);
         connect(frame, &VideoFrame::rightClicked, this, &LiveViewWindow::onRightClick);
@@ -96,7 +96,7 @@ LiveViewWindow::LiveViewWindow(QWidget *parent)
     initSdk();
 
     QList<QScreen*> screens = QApplication::screens();
-    int screenIdx = qBound(0, m_config.displayScreen, screens.size() - 1);
+    int screenIdx = qBound(0, m_config.monitorIndex, screens.size() - 1);
     setGeometry(screens[screenIdx]->geometry());
 
     showFullScreen();
@@ -142,6 +142,17 @@ void LiveViewWindow::initSdk()
     NET_DVR_SetExceptionCallBack_V30(0, nullptr, exceptionCallback, nullptr);
 }
 
+void LiveViewWindow::applyVcaDrawMode(LONG userId, int channel)
+{
+    if (!m_config.hideVcaOverlay)
+        return;
+    NET_VCA_DRAW_MODE drawMode{};
+    drawMode.dwSize         = sizeof(drawMode);
+    drawMode.byDspAddTarget = 0;
+    drawMode.byDspAddRule   = 0;
+    NET_DVR_SetVCADrawMode(userId, channel, &drawMode);
+}
+
 bool LiveViewWindow::attemptStream(const RetryEntry &e)
 {
     NET_DVR_USER_LOGIN_INFO loginInfo{};
@@ -160,6 +171,8 @@ bool LiveViewWindow::attemptStream(const RetryEntry &e)
         m_frames[e.frameIdx]->setStatus(sdkErrorString(NET_DVR_GetLastError(), e.device.ip));
         return false;
     }
+
+    applyVcaDrawMode(userId, e.channel);
 
     NET_DVR_PREVIEWINFO previewInfo{};
     previewInfo.lChannel        = e.channel;
@@ -213,6 +226,8 @@ void LiveViewWindow::startAllStreams()
         for (int channel : dev.channels) {
             if (frameIdx >= m_frames.size())
                 break;
+
+            applyVcaDrawMode(userId, channel);
 
             NET_DVR_PREVIEWINFO previewInfo{};
             previewInfo.lChannel        = channel;

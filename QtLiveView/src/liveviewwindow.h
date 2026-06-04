@@ -44,6 +44,7 @@ private:
     void startAllStreams();
     void stopAllStreams();
     bool attemptStream(const RetryEntry &e);
+    void applyVcaDrawMode(LONG userId, int channel);
 
     static constexpr int RETRY_STAGGER_MS  = 3000;
     static constexpr int RETRY_COOLDOWN_MS = 60000;
