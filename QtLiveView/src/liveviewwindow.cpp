@@ -9,14 +9,19 @@ static QString sdkErrorString(DWORD code, const QString &ip)
 {
     QString desc;
     switch (code) {
-    case 7:  desc = "Auth Failed";           break;
-    case 3:  desc = "Offline";               break;
-    case 10: desc = "Connection Timeout";    break;
-    case 4:  desc = "Network Send Error";    break;
-    case 5:  desc = "Network Recv Error";    break;
-    case 9:  desc = "Insufficient Privilege";break;
-    case 20: desc = "Max Users Reached";     break;
-    case 47: desc = "Device Busy";           break;
+    case 1:  desc = "Auth Failed";             break;  // NET_DVR_PASSWORD_ERROR
+    case 2:  desc = "Insufficient Privilege";  break;  // NET_DVR_NOENOUGHPRI
+    case 4:  desc = "Channel Error";           break;  // NET_DVR_CHANNEL_ERROR
+    case 5:  desc = "Max Connections Reached"; break;  // NET_DVR_OVER_MAXLINK
+    case 7:  desc = "Offline";                 break;  // NET_DVR_NETWORK_FAIL_CONNECT
+    case 8:  desc = "Network Send Error";      break;  // NET_DVR_NETWORK_SEND_ERROR
+    case 9:  desc = "Network Recv Error";      break;  // NET_DVR_NETWORK_RECV_ERROR
+    case 10: desc = "Connection Timeout";      break;  // NET_DVR_NETWORK_RECV_TIMEOUT
+    case 17: desc = "Parameter Error";         break;  // NET_DVR_PARAMETER_ERROR
+    case 26: desc = "Password Format Error";   break;  // NET_DVR_PASSWORD_FORMAT_ERROR
+    case 47: desc = "User Not Found";          break;  // NET_DVR_USERNOTEXIST
+    case 152: desc = "Username Not Exist";     break;  // NET_DVR_USERNAME_NOT_EXIST
+    case 153: desc = "Account Locked";         break;  // NET_DVR_USER_LOCKED
     default: desc = QString("Error %1").arg(code); break;
     }
     return QString("%1\n%2").arg(ip, desc);
