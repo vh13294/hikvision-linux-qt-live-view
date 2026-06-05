@@ -89,7 +89,7 @@ LiveViewWindow::LiveViewWindow(QWidget *parent)
 {
     g_window = this;
 
-    m_config = loadConfig("./config/DeviceConfig.json");
+    m_config = loadConfig(QCoreApplication::applicationDirPath() + "/config/DeviceConfig.json");
     if (!m_config.valid) {
         QMessageBox::critical(this, "Config Error",
             "Failed to load ./config/DeviceConfig.json.\n"
@@ -121,6 +121,7 @@ LiveViewWindow::LiveViewWindow(QWidget *parent)
     setGeometry(screens[screenIdx]->geometry());
 
     showFullScreen();
+    setCursor(Qt::BlankCursor);
     startAllStreams();
 }
 
@@ -258,74 +259,12 @@ void LiveViewWindow::startAllStreams()
     int frameIdx = 0;
 
     for (const DeviceEntry &dev : m_config.devices) {
-        NET_DVR_USER_LOGIN_INFO loginInfo{};
-        NET_DVR_DEVICEINFO_V40  deviceInfoV40{};
-        loginInfo.bUseAsynLogin = false;
-        loginInfo.wPort         = dev.port;
-        strncpy(loginInfo.sDeviceAddress, dev.ip.toLatin1().constData(),
-                sizeof(loginInfo.sDeviceAddress) - 1);
-        strncpy(loginInfo.sUserName, dev.username.toLatin1().constData(),
-                sizeof(loginInfo.sUserName) - 1);
-        strncpy(loginInfo.sPassword, dev.password.toLatin1().constData(),
-                sizeof(loginInfo.sPassword) - 1);
-
-        LONG userId = NET_DVR_Login_V40(&loginInfo, &deviceInfoV40);
-        if (userId < 0) {
-            DWORD err = NET_DVR_GetLastError();
-            for (int i = 0; i < dev.channels.size() && frameIdx < m_frames.size(); i++, frameIdx++) {
-                m_frames[frameIdx]->setStatus(sdkErrorString(err, dev.ip));
-                m_retryQueue.append({dev, dev.channels[i], frameIdx});
-            }
-            continue;
-        }
-        m_userIds.append(userId);
-
         for (int channel : dev.channels) {
             if (frameIdx >= m_frames.size())
                 break;
-
-            NET_DVR_PREVIEWINFO previewInfo{};
-            previewInfo.lChannel        = channel;
-            previewInfo.dwLinkMode      = dev.streamType;
-            previewInfo.bBlocked        = 1;
-            previewInfo.dwDisplayBufNum = 1;
-
-            RawPlayCtx *ctx = nullptr;
-            WId wid = m_frames[frameIdx]->videoWinId();
-            if (m_config.renderRaw) {
-                int port = -1;
-                if (PlayM4_GetPort(&port)) {
-                    PlayM4_SetStreamOpenMode(port, STREAME_REALTIME);
-                    if (PlayM4_OpenStream(port, nullptr, 0, 1024 * 1024)) {
-                        PlayM4_SetDisplayBuf(port, 6);
-                        PlayM4_Play(port, static_cast<PLAYM4_HWND>(wid));
-                        PlayM4_RenderPrivateData(port, PLAYM4_RENDER_ANA_INTEL_DATA | PLAYM4_RENDER_MD, FALSE);
-                        ctx = new RawPlayCtx{port, wid};
-                    } else {
-                        PlayM4_FreePort(port);
-                    }
-                }
-            }
-            if (!ctx) {
-                if (m_config.hideVcaOverlay)
-                    applyHideOverlay(userId, channel);
-                previewInfo.hPlayWnd = (HWND)wid;
-            }
-
-            LONG realHandle = NET_DVR_RealPlay_V40(userId, &previewInfo,
-                                                   m_config.renderRaw ? rawDataCallback : nullptr,
-                                                   ctx);
-            if (realHandle < 0) {
-                DWORD err = NET_DVR_GetLastError();
-                m_frames[frameIdx]->setStatus(
-                    QString("%1  ch%2\n%3").arg(dev.ip).arg(channel)
-                        .arg(sdkErrorString(err, "").trimmed()));
-                stopRawPlay(ctx);
-                m_retryQueue.append({dev, channel, frameIdx});
-            } else {
-                m_frames[frameIdx]->clearStatus();
-                m_streams.append({realHandle, userId, {dev, channel, frameIdx}, ctx});
-            }
+            RetryEntry e{dev, channel, frameIdx};
+            if (!attemptStream(e))
+                m_retryQueue.append(e);
             frameIdx++;
         }
     }
