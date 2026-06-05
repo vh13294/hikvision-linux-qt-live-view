@@ -224,6 +224,21 @@ bool LiveViewWindow::attemptStream(const RetryEntry &e)
                 PlayM4_SetDisplayBuf(port, 6);
                 PlayM4_Play(port, static_cast<PLAYM4_HWND>(wid));
                 PlayM4_RenderPrivateData(port, PLAYM4_RENDER_ANA_INTEL_DATA | PLAYM4_RENDER_MD, FALSE);
+
+                if (m_config.optimizeRender) {
+                    PlayM4_SetPicQuality(port, TRUE);
+                    PlayM4_SetDeflash(port, TRUE);
+                    PlayM4_ThrowBFrameNum(port, 0);
+
+                    // VIE: deblock removes H.264 block artifacts; light denoise reduces noise without smearing detail
+                    PlayM4_VIE_SetModuConfig(port, PLAYM4_VIE_MODU_DEBLOCK | PLAYM4_VIE_MODU_DENOISE, TRUE);
+                    PLAYM4_VIE_PARACONFIG vieCfg{};
+                    vieCfg.moduFlag     = PLAYM4_VIE_MODU_DEBLOCK | PLAYM4_VIE_MODU_DENOISE;
+                    vieCfg.deblockLevel = 30;
+                    vieCfg.denoiseLevel = 20;
+                    PlayM4_VIE_SetParaConfig(port, &vieCfg);
+                }
+
                 ctx = new RawPlayCtx{port, wid};
             } else {
                 PlayM4_FreePort(port);
@@ -249,7 +264,14 @@ bool LiveViewWindow::attemptStream(const RetryEntry &e)
     }
 
     m_frames[e.frameIdx]->clearStatus();
-    m_streams.append({realHandle, userId, e, ctx});
+
+    QMetaObject::Connection resizeConn;
+    if (ctx) {
+        int port = ctx->port;
+        resizeConn = connect(m_frames[e.frameIdx], &VideoFrame::resized,
+                             [port]() { PlayM4_WndResolutionChange(port); });
+    }
+    m_streams.append({realHandle, userId, e, ctx, resizeConn});
     m_userIds.append(userId);
     return true;
 }
@@ -304,6 +326,7 @@ void LiveViewWindow::onStreamDropped(long realHandle)
         if (m_streams[i].realHandle == static_cast<LONG>(realHandle)) {
             StreamHandle sh = m_streams.takeAt(i);
 
+            disconnect(sh.resizeConn);
             NET_DVR_StopRealPlay(sh.realHandle);  // guaranteed to stop the callback before returning
             stopRawPlay(sh.rawCtx);
             NET_DVR_Logout_V30(sh.userId);
@@ -356,6 +379,7 @@ void LiveViewWindow::stopAllStreams()
     m_retryQueue.clear();
 
     for (const StreamHandle &sh : m_streams) {
+        disconnect(sh.resizeConn);
         NET_DVR_StopRealPlay(sh.realHandle);  // stops callback before returning
         stopRawPlay(sh.rawCtx);
     }

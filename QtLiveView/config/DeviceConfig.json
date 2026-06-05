@@ -3,6 +3,7 @@
   "gridSize": 2,
   "renderRaw": false,
   "hideVcaOverlay": false,
+  "optimizeRender": false,
   "devices": [
     {
       "ip": "192.168.1.100",

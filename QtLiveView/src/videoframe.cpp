@@ -9,6 +9,8 @@ VideoFrame::VideoFrame(QWidget *parent)
 {
     setStyleSheet("background-color: black; border: 1px solid #333;");
     m_playArea->setStyleSheet("background-color: black; border: none;");
+    m_playArea->setAttribute(Qt::WA_NativeWindow);
+    m_playArea->setAttribute(Qt::WA_PaintOnScreen);
     m_playArea->move(1, 1);
 
     m_statusLabel->setAlignment(Qt::AlignCenter);
@@ -45,6 +47,7 @@ void VideoFrame::resizeEvent(QResizeEvent *event)
 {
     m_playArea->resize(event->size().width() - 2, event->size().height() - 2);
     m_statusLabel->setGeometry(0, 0, event->size().width(), event->size().height());
+    emit resized();
 }
 
 void VideoFrame::mousePressEvent(QMouseEvent *event)

@@ -41,10 +41,11 @@ private:
     };
 
     struct StreamHandle {
-        LONG        realHandle;
-        LONG        userId;
-        RetryEntry  entry;
-        RawPlayCtx *rawCtx = nullptr;
+        LONG                    realHandle;
+        LONG                    userId;
+        RetryEntry              entry;
+        RawPlayCtx             *rawCtx = nullptr;
+        QMetaObject::Connection resizeConn;
     };
 
     static void CALLBACK rawDataCallback(LONG lPlayHandle, DWORD dwDataType,

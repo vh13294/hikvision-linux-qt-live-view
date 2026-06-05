@@ -23,7 +23,9 @@ Edit `config/DeviceConfig.json` next to the binary before running.
 {
   "monitorIndex": 0,
   "gridSize": 2,
+  "renderRaw": false,
   "hideVcaOverlay": false,
+  "optimizeRender": false,
   "devices": [
     {
       "ip": "192.168.1.100",
@@ -45,6 +47,7 @@ Edit `config/DeviceConfig.json` next to the binary before running.
 | `gridSize` | int | Grid size — `2` = 2×2, `3` = 3×3, `4` = 4×4 |
 | `renderRaw` | bool | Bypass HCPreview pipeline: raw callback → PlayCtrl decode (no overlays, phone unaffected) |
 | `hideVcaOverlay` | bool | Fallback: disable motion display on the device via `NET_DVR_SetDVRConfig` (persistent, affects all clients) |
+| `optimizeRender` | bool | Enable PlayCtrl rendering quality improvements (requires `renderRaw: true`) |
 
 ### Device fields
 
@@ -85,6 +88,22 @@ When `true`, each stream bypasses the Hikvision HCPreview rendering pipeline ent
 - The device configuration is not touched — no persistent changes are made.
 
 **Fallback behaviour:** if PlayCtrl setup fails for a stream (e.g. `PlayM4_GetPort` or `PlayM4_OpenStream` returns an error), that stream falls back to normal HCPreview rendering. If `hideVcaOverlay` is also `true`, the device-side config is applied for that stream before falling back, suppressing the overlay at the source.
+
+## optimizeRender
+
+Requires `renderRaw: true`. When `true`, enables a set of PlayCtrl rendering quality improvements targeted at the jagged/blocky appearance that Linux produces compared to the Windows SDK build.
+
+**What it enables:**
+
+- `PlayM4_SetPicQuality` — switches the scaler to high-quality mode (bilinear/bicubic interpolation instead of nearest-neighbour). This is the primary fix for jagged edges when the decoded frame is stretched to fill the widget.
+- `PlayM4_SetDeflash` — reduces tearing caused by double-buffer timing mismatches.
+- `PlayM4_ThrowBFrameNum(0)` — decodes all B-frames rather than dropping them, ensuring full temporal resolution.
+- **VIE deblock** (level 30/100) — PlayCtrl's built-in post-processing filter that smooths the visible square block artifacts produced by H.264/H.265 at lower bitrates.
+- **VIE denoise** (level 20/255) — light noise reduction pass. Intentionally mild so fine detail is preserved; increase the value in code if the camera feed is very noisy.
+
+**Trade-offs:**
+- Adds a small amount of CPU overhead per stream for the VIE pass.
+- Denoise and deblock are post-decode filters — they do not affect recordings or other clients.
 
 ## hideVcaOverlay
 

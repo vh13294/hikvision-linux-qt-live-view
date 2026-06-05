@@ -16,6 +16,7 @@ public:
 
 signals:
     void rightClicked();
+    void resized();
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
