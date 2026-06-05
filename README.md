@@ -39,6 +39,7 @@ Edit `build/liveview/config/DeviceConfig.json` before running:
   "gridSize": 2,
   "renderRaw": false,
   "hideVcaOverlay": false,
+  "optimizeRender": false,
   "devices": [
     {
       "ip": "192.168.1.100",
@@ -58,6 +59,7 @@ Edit `build/liveview/config/DeviceConfig.json` before running:
 | `gridSize` | Grid dimension: `1`=1×1, `2`=2×2, `3`=3×3, `4`=4×4 |
 | `renderRaw` | `true` = render raw video data directly, bypassing SDK overlay rendering |
 | `hideVcaOverlay` | `true` = hide VCA overlay; used as fallback when `renderRaw` is unavailable |
+| `optimizeRender` | `true` = enable PlayCtrl quality improvements: high-quality scaling, deblock, denoise (requires `renderRaw: true`) |
 | `streamType` | `0` = main stream, `1` = sub stream |
 | `channels` | List of channel numbers to display (NVR IP channels start at 33) |
 
