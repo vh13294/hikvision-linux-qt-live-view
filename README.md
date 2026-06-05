@@ -57,8 +57,6 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
-GitHub Actions will build the Qt demo on Ubuntu 22.04 and attach the packaged binary to the release automatically.
-
 ---
 
 ## Building the Demos
@@ -97,8 +95,10 @@ Edit `build/liveview/config/DeviceConfig.json` before running:
 
 ```json
 {
-  "displayScreen": 0,
-  "numberOfScreen": 2,
+  "monitorIndex": 0,
+  "gridSize": 2,
+  "renderRaw": false,
+  "hideVcaOverlay": false,
   "devices": [
     {
       "ip": "192.168.1.100",
@@ -114,8 +114,10 @@ Edit `build/liveview/config/DeviceConfig.json` before running:
 
 | Field | Description |
 |---|---|
-| `displayScreen` | Monitor index (0 = primary) |
-| `numberOfScreen` | Grid dimension: `1`=1×1, `2`=2×2, `3`=3×3, `4`=4×4 |
+| `monitorIndex` | Monitor index (0 = primary) |
+| `gridSize` | Grid dimension: `1`=1×1, `2`=2×2, `3`=3×3, `4`=4×4 |
+| `renderRaw` | `true` = render raw video data directly, bypassing SDK overlay rendering |
+| `hideVcaOverlay` | `true` = hide VCA overlay; used as fallback when `renderRaw` is unavailable |
 | `streamType` | `0` = main stream, `1` = sub stream |
 | `channels` | List of channel numbers to display (NVR IP channels start at 33) |
 
@@ -123,6 +125,56 @@ Edit `build/liveview/config/DeviceConfig.json` before running:
 
 ```bash
 bash build/liveview/run.sh
+```
+
+The script auto-detects whether to use software rendering: on a VM or a machine with no `/dev/dri/card*` device it sets `LIBGL_ALWAYS_SOFTWARE=1` automatically. Override with `HK_FORCE_SW_RENDER=1` (force software) or `HK_FORCE_SW_RENDER=0` (force hardware).
+
+### Auto-start on Boot (systemd)
+
+Create a systemd service so QtLiveView starts automatically after the display is ready.
+
+**1. Create the service file:**
+
+```bash
+sudo nano /etc/systemd/system/qtliveview.service
+```
+
+```ini
+[Unit]
+Description=Hikvision QtLiveView
+After=graphical.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/your_username/path/to/build/liveview
+User=your_username
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=/home/your_username/.Xauthority
+ExecStartPre=/bin/sleep 180
+ExecStart=/home/your_username/path/to/build/liveview/run.sh
+Restart=on-failure
+
+[Install]
+WantedBy=graphical.target
+```
+
+Replace `/home/your_username/path/to/build/liveview` with the actual path to your `build/liveview` folder.
+
+`ExecStartPre=/bin/sleep 180` gives the display manager time to start before the app launches on boot. Reduce or remove it if starting from an already-running user session.
+
+**2. Enable and start:**
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable qtliveview.service
+sudo systemctl start qtliveview.service
+```
+
+**3. Check status / logs:**
+
+```bash
+sudo systemctl status qtliveview.service
+journalctl -u qtliveview.service -f
 ```
 
 ---
@@ -156,3 +208,4 @@ The generated `run.sh` sets `LD_LIBRARY_PATH` relative to its own location, so t
 | cJSON | — | MIT |
 
 Full license texts: [doc/Open Source Software Licenses-HCNetSDK.txt](doc/Open%20Source%20Software%20Licenses-HCNetSDK.txt)
+
