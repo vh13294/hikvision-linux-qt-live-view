@@ -10,8 +10,8 @@ with Qt5 tools and VS Code in the browser.
 
 **Start:**
 ```bash
-DOCKER_BUILDKIT=0 docker compose build
-DOCKER_BUILDKIT=0 docker compose up -d
+docker compose build
+docker compose up -d
 ```
 
 The container uses the LinuxServer.io PUID/PGID pattern: the entrypoint runs as root,
@@ -20,12 +20,6 @@ drops privileges before starting code-server. Edit `PUID`/`PGID` in `docker-comp
 to match your host user (`id -u` / `id -g`). The default is `0`/`0` (root) for Proxmox LXC.
 
 **Open:** `http://localhost:9015` — no password required (port is bound to `0.0.0.0`, reachable from any device on the same network).
-
-> **Why `DOCKER_BUILDKIT=0`:** BuildKit runs as a separate daemon that reads `/proc/stat` to report
-> resource usage after exporting layers. On Proxmox LXC it can be OOM-killed mid-export (this image is
-> large — Qt5 + build tools + code-server), severing the gRPC connection between the Docker CLI and the
-> BuildKit daemon, which surfaces as `transport endpoint is not connected`. Disabling BuildKit falls back
-> to the classic in-process builder which has no separate daemon to lose connection to.
 
 ---
 
