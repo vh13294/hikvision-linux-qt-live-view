@@ -73,9 +73,15 @@ The script auto-detects whether to use software rendering: on a VM or a machine 
 
 ### Auto-start on Boot (systemd)
 
-Create a systemd service so QtLiveView starts automatically after the display is ready.
+After a fresh Debian 12 LXQt install you can run the Ansible playbook (if available) to automate all of the steps below — systemd service setup, caffeine install, and cron configuration. Otherwise, follow the manual steps.
 
-**1. Create the service file:**
+**1. Install caffeine** — prevents screen sleep and screensaver from interrupting the live view:
+
+```bash
+sudo apt update && sudo apt install caffeine -y
+```
+
+**2. Create the service file:**
 
 ```bash
 sudo nano /etc/systemd/system/qtliveview.service
@@ -83,28 +89,27 @@ sudo nano /etc/systemd/system/qtliveview.service
 
 ```ini
 [Unit]
-Description=Hikvision QtLiveView
-After=graphical.target
+Description=QtLiveView auto-start
+After=network.target
 
 [Service]
-Type=simple
-WorkingDirectory=/home/your_username/path/to/build/liveview
+Type=oneshot
 User=your_username
 Environment=DISPLAY=:0
 Environment=XAUTHORITY=/home/your_username/.Xauthority
-ExecStartPre=/bin/sleep 180
-ExecStart=/home/your_username/path/to/build/liveview/run.sh
-Restart=on-failure
+ExecStartPre=/bin/sleep 20
+ExecStart=/usr/bin/caffeinate /home/your_username/Downloads/QtLiveView/run.sh
 
 [Install]
-WantedBy=graphical.target
+WantedBy=multi-user.target
 ```
 
-Replace `/home/your_username/path/to/build/liveview` with the actual path to your `build/liveview` folder.
+Replace `your_username` with your actual Linux username and update the path to `run.sh` if needed.
 
-`ExecStartPre=/bin/sleep 180` gives the display manager time to start before the app launches on boot. Reduce or remove it if starting from an already-running user session.
+- `ExecStartPre=/bin/sleep 20` gives the display manager a moment to settle before the app launches.
+- `caffeinate` keeps the session awake (no screen sleep or screensaver) for the lifetime of the process.
 
-**2. Enable and start:**
+**3. Enable and start:**
 
 ```bash
 sudo systemctl daemon-reload
@@ -112,11 +117,51 @@ sudo systemctl enable qtliveview.service
 sudo systemctl start qtliveview.service
 ```
 
-**3. Check status / logs:**
+**4. Check status / logs:**
 
 ```bash
 sudo systemctl status qtliveview.service
 journalctl -u qtliveview.service -f
+```
+
+---
+
+### Scheduled Shutdown (cron)
+
+To shut down the machine automatically every night at 22:00, add a cron job.
+
+**Open the root crontab:**
+
+```bash
+sudo crontab -e
+```
+
+On first run it will ask you to choose an editor — pick `nano` if unsure.
+
+**Add this line at the bottom:**
+
+```
+0 22 * * * /usr/sbin/shutdown -h now
+```
+
+Save and exit (`Ctrl+O`, `Enter`, `Ctrl+X` in nano).
+
+**Cron field reference:**
+
+```
+┌─ minute  (0–59)
+│ ┌─ hour   (0–23)
+│ │ ┌─ day of month (1–31)
+│ │ │ ┌─ month (1–12)
+│ │ │ │ ┌─ day of week (0–7, 0 and 7 = Sunday)
+│ │ │ │ │
+0 22 * * *   /usr/sbin/shutdown -h now
+```
+
+**Verify the cron job was saved:**
+
+```bash
+sudo crontab -l
 ```
 
 ---
