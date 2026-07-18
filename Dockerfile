@@ -29,6 +29,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libglx-dev \
     # SDL2 – used by libHCDisplay / libSuperRender for video surface rendering
     libsdl2-dev \
+    # FFmpeg – used by QtLiveView hwDecode path (VAAPI hardware decode)
+    libavcodec-dev \
+    libavformat-dev \
+    libavutil-dev \
     # OpenAL – audio rendering (SDK ships libopenal.so.1 but dev headers needed)
     libopenal-dev \
     # OpenSSL headers – SDK ships its own libssl.so.1.1 / libcrypto.so.1.1

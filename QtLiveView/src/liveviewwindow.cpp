@@ -1,4 +1,6 @@
 #include "liveviewwindow.h"
+#include "ffmpegdecoder.h"
+#include "glvideowidget.h"
 #include <QApplication>
 #include <QDebug>
 #include <QFile>
@@ -60,25 +62,25 @@ static void CALLBACK exceptionCallback(DWORD dwType, LONG /*lUserID*/, LONG lHan
     }
 }
 
-// Called on an SDK-internal thread. PlayCtrl is already open and playing
+// Called on an SDK-internal thread. The FFmpeg decoder is already running
 // (set up on the main thread before NET_DVR_RealPlay_V40) — just feed data.
 void CALLBACK LiveViewWindow::rawDataCallback(LONG /*lPlayHandle*/, DWORD dwDataType,
                                               BYTE *pBuffer, DWORD dwBufSize, void *pUser)
 {
-    auto *ctx = static_cast<RawPlayCtx *>(pUser);
-    if (!ctx || ctx->port < 0)
+    auto *decoder = static_cast<FfmpegDecoder *>(pUser);
+    if (!decoder)
         return;
     if (dwDataType == NET_DVR_SYSHEAD || dwDataType == NET_DVR_STREAMDATA)
-        PlayM4_InputData(ctx->port, pBuffer, dwBufSize);
+        decoder->feed(pBuffer, static_cast<int>(dwBufSize));
 }
 
-void LiveViewWindow::stopRawPlay(RawPlayCtx *ctx)
+void LiveViewWindow::stopDecoder(FfmpegDecoder *decoder)
 {
-    if (!ctx) return;
-    PlayM4_Stop(ctx->port);
-    PlayM4_CloseStream(ctx->port);
-    PlayM4_FreePort(ctx->port);
-    delete ctx;
+    if (!decoder)
+        return;
+    // Caller has already stopped the SDK stream, so feed() is quiet.
+    decoder->shutdown();
+    decoder->deleteLater();
 }
 
 LiveViewWindow::LiveViewWindow(QWidget *parent)
@@ -104,7 +106,7 @@ LiveViewWindow::LiveViewWindow(QWidget *parent)
 
     int cols = qBound(1, m_config.gridSize, 4);
     for (int i = 0; i < cols * cols; i++) {
-        VideoFrame *frame = new VideoFrame(m_central);
+        VideoFrame *frame = new VideoFrame(m_central, m_config.hwDecode);
         connect(frame, &VideoFrame::rightClicked, this, &LiveViewWindow::onRightClick);
         m_frames.append(frame);
         m_grid->addWidget(frame, i / cols, i % cols);
@@ -214,64 +216,43 @@ bool LiveViewWindow::attemptStream(const RetryEntry &e)
     previewInfo.bBlocked        = 1;
     previewInfo.dwDisplayBufNum = 1;
 
-    RawPlayCtx *ctx = nullptr;
-    WId wid = m_frames[e.frameIdx]->videoWinId();
-    if (m_config.renderRaw) {
-        int port = -1;
-        if (PlayM4_GetPort(&port)) {
-            PlayM4_SetStreamOpenMode(port, STREAME_REALTIME);
-            if (PlayM4_OpenStream(port, nullptr, 0, 1024 * 1024)) {
-                PlayM4_SetDisplayBuf(port, 6);
-                PlayM4_Play(port, static_cast<PLAYM4_HWND>(wid));
-                PlayM4_RenderPrivateData(port, PLAYM4_RENDER_ANA_INTEL_DATA | PLAYM4_RENDER_MD, FALSE);
-
-                if (m_config.optimizeRender) {
-                    PlayM4_SetPicQuality(port, TRUE);
-                    PlayM4_SetDeflash(port, TRUE);
-                    PlayM4_ThrowBFrameNum(port, 0);
-
-                    // VIE: deblock removes H.264 block artifacts; light denoise reduces noise without smearing detail
-                    PlayM4_VIE_SetModuConfig(port, PLAYM4_VIE_MODU_DEBLOCK | PLAYM4_VIE_MODU_DENOISE, TRUE);
-                    PLAYM4_VIE_PARACONFIG vieCfg{};
-                    vieCfg.moduFlag     = PLAYM4_VIE_MODU_DEBLOCK | PLAYM4_VIE_MODU_DENOISE;
-                    vieCfg.deblockLevel = 30;
-                    vieCfg.denoiseLevel = 20;
-                    PlayM4_VIE_SetParaConfig(port, &vieCfg);
-                }
-
-                ctx = new RawPlayCtx{port, wid};
-            } else {
-                PlayM4_FreePort(port);
-            }
-        }
-    }
-    if (!ctx) {
-        if (m_config.hideVcaOverlay)
-            applyHideOverlay(userId, e.channel);
-        previewInfo.hPlayWnd = (HWND)wid;
+    FfmpegDecoder *decoder = nullptr;
+    QMetaObject::Connection viewConn;
+    if (m_config.hwDecode) {
+        // FFmpeg + VAAPI path: SDK callback → decoder thread → GL widget.
+        VideoFrame    *vf = m_frames[e.frameIdx];
+        GLVideoWidget *gl = vf->glWidget();
+        decoder = new FfmpegDecoder(this);
+        viewConn = connect(decoder, &FfmpegDecoder::frameReady, gl, [decoder, gl]() {
+            VideoFrameData f;
+            if (decoder->takeFrame(f))
+                gl->present(f);
+        });
+        connect(decoder, &FfmpegDecoder::decodeError, vf,
+                [vf, ip = e.device.ip](const QString &msg) {
+                    vf->setStatus(QString("%1\n%2").arg(ip, msg));
+                });
+        decoder->start();
+    } else {
+        applyHideOverlay(userId, e.channel);
+        previewInfo.hPlayWnd = (HWND)m_frames[e.frameIdx]->videoWinId();
     }
 
     LONG realHandle = NET_DVR_RealPlay_V40(userId, &previewInfo,
-                                           m_config.renderRaw ? rawDataCallback : nullptr,
-                                           ctx);
+                                           decoder ? rawDataCallback : nullptr,
+                                           decoder);
     if (realHandle < 0) {
         m_frames[e.frameIdx]->setStatus(
             QString("%1  ch%2\n%3").arg(e.device.ip).arg(e.channel)
                 .arg(sdkErrorString(NET_DVR_GetLastError(), "").trimmed()));
         NET_DVR_Logout_V30(userId);
-        stopRawPlay(ctx);
+        disconnect(viewConn);
+        stopDecoder(decoder);
         return false;
     }
 
     m_frames[e.frameIdx]->clearStatus();
-
-    QMetaObject::Connection resizeConn;
-    if (ctx) {
-        int port = ctx->port;
-        resizeConn = connect(m_frames[e.frameIdx], &VideoFrame::resized,
-                             [port]() { PlayM4_WndResolutionChange(port); });
-    }
-    m_streams.append({realHandle, userId, e, ctx, resizeConn});
+    m_streams.append({realHandle, userId, e, decoder, viewConn});
     m_userIds.append(userId);
     return true;
 }
@@ -326,9 +307,9 @@ void LiveViewWindow::onStreamDropped(long realHandle)
         if (m_streams[i].realHandle == static_cast<LONG>(realHandle)) {
             StreamHandle sh = m_streams.takeAt(i);
 
-            disconnect(sh.resizeConn);
+            disconnect(sh.viewConn);
             NET_DVR_StopRealPlay(sh.realHandle);  // guaranteed to stop the callback before returning
-            stopRawPlay(sh.rawCtx);
+            stopDecoder(sh.decoder);
             NET_DVR_Logout_V30(sh.userId);
             m_userIds.removeOne(sh.userId);
 
@@ -379,9 +360,9 @@ void LiveViewWindow::stopAllStreams()
     m_retryQueue.clear();
 
     for (const StreamHandle &sh : m_streams) {
-        disconnect(sh.resizeConn);
+        disconnect(sh.viewConn);
         NET_DVR_StopRealPlay(sh.realHandle);  // stops callback before returning
-        stopRawPlay(sh.rawCtx);
+        stopDecoder(sh.decoder);
     }
     m_streams.clear();
 

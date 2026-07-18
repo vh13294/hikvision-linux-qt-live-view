@@ -1,17 +1,24 @@
 #include "videoframe.h"
+#include "glvideowidget.h"
 #include <QMouseEvent>
 #include <QResizeEvent>
 
-VideoFrame::VideoFrame(QWidget *parent)
+VideoFrame::VideoFrame(QWidget *parent, bool glVideo)
     : QFrame(parent)
-    , m_playArea(new QFrame(this))
     , m_statusLabel(new QLabel(this))
 {
     setStyleSheet("background-color: black; border: 1px solid #333;");
-    m_playArea->setStyleSheet("background-color: black; border: none;");
-    m_playArea->setAttribute(Qt::WA_NativeWindow);
-    m_playArea->setAttribute(Qt::WA_PaintOnScreen);
-    m_playArea->move(1, 1);
+
+    if (glVideo) {
+        m_glWidget = new GLVideoWidget(this);
+        m_glWidget->move(1, 1);
+    } else {
+        m_playArea = new QFrame(this);
+        m_playArea->setStyleSheet("background-color: black; border: none;");
+        m_playArea->setAttribute(Qt::WA_NativeWindow);
+        m_playArea->setAttribute(Qt::WA_PaintOnScreen);
+        m_playArea->move(1, 1);
+    }
 
     m_statusLabel->setAlignment(Qt::AlignCenter);
     m_statusLabel->setWordWrap(true);
@@ -26,7 +33,7 @@ VideoFrame::VideoFrame(QWidget *parent)
 
 WId VideoFrame::videoWinId() const
 {
-    return m_playArea->winId();
+    return m_playArea ? m_playArea->winId() : 0;
 }
 
 void VideoFrame::setStatus(const QString &text)
@@ -45,9 +52,10 @@ void VideoFrame::clearStatus()
 
 void VideoFrame::resizeEvent(QResizeEvent *event)
 {
-    m_playArea->resize(event->size().width() - 2, event->size().height() - 2);
+    QWidget *videoArea = m_playArea ? static_cast<QWidget*>(m_playArea)
+                                    : static_cast<QWidget*>(m_glWidget);
+    videoArea->resize(event->size().width() - 2, event->size().height() - 2);
     m_statusLabel->setGeometry(0, 0, event->size().width(), event->size().height());
-    emit resized();
 }
 
 void VideoFrame::mousePressEvent(QMouseEvent *event)

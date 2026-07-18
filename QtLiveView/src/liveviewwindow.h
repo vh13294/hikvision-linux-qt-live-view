@@ -6,7 +6,8 @@
 #include "deviceconfig.h"
 #include "videoframe.h"
 #include "HCNetSDK.h"
-#include "PlayM4.h"
+
+class FfmpegDecoder;
 
 class LiveViewWindow : public QMainWindow
 {
@@ -35,17 +36,12 @@ private:
         int         frameIdx;
     };
 
-    struct RawPlayCtx {
-        int port = -1;
-        WId wid  = 0;
-    };
-
     struct StreamHandle {
         LONG                    realHandle;
         LONG                    userId;
         RetryEntry              entry;
-        RawPlayCtx             *rawCtx = nullptr;
-        QMetaObject::Connection resizeConn;
+        FfmpegDecoder          *decoder = nullptr;  // hwDecode mode only
+        QMetaObject::Connection viewConn;           // hwDecode: frameReady→GL widget
     };
 
     static void CALLBACK rawDataCallback(LONG lPlayHandle, DWORD dwDataType,
@@ -55,7 +51,7 @@ private:
     void startAllStreams();
     void stopAllStreams();
     bool attemptStream(const RetryEntry &e);
-    void stopRawPlay(RawPlayCtx *ctx);
+    static void stopDecoder(FfmpegDecoder *decoder);
     void applyHideOverlay(LONG userId, int channel);
 
     static constexpr int RETRY_STAGGER_MS  = 3000;

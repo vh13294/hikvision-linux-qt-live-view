@@ -23,6 +23,12 @@ sudo apt install \
 
 Pre-built binaries are attached to each [GitHub Release](https://github.com/vh13294/hikvision-linux-qt-live-view/releases) as `QtClientDemo-linux64.tar.gz` (binary + SDK libs + run script).
 
+After downloading, make the binary and run script executable (the execute bit is lost if the files pass through a zip, a Windows machine, or a FAT/exFAT USB stick — the app then fails with `Permission denied`):
+
+```bash
+chmod +x QtLiveView run.sh
+```
+
 ---
 
 ## QtLiveView — Auto-start Live View
@@ -37,9 +43,8 @@ Edit `build/liveview/config/DeviceConfig.json` before running:
 {
   "monitorIndex": 0,
   "gridSize": 2,
-  "renderRaw": false,
   "hideVcaOverlay": false,
-  "optimizeRender": false,
+  "hwDecode": true,
   "devices": [
     {
       "ip": "192.168.1.100",
@@ -57,9 +62,8 @@ Edit `build/liveview/config/DeviceConfig.json` before running:
 |---|---|
 | `monitorIndex` | Monitor index (0 = primary) |
 | `gridSize` | Grid dimension: `1`=1×1, `2`=2×2, `3`=3×3, `4`=4×4 |
-| `renderRaw` | `true` = render raw video data directly, bypassing SDK overlay rendering |
-| `hideVcaOverlay` | `true` = hide VCA overlay; used as fallback when `renderRaw` is unavailable |
-| `optimizeRender` | `true` = enable PlayCtrl quality improvements: high-quality scaling, deblock, denoise (requires `renderRaw: true`) |
+| `hideVcaOverlay` | `true` = hide VCA overlay on the device itself (persistent, affects all clients) |
+| `hwDecode` | Default `true`: decode with FFmpeg + VAAPI (Intel GPU) instead of the SDK's software decoder — fixes accumulating live-view delay on Linux; no SDK overlays are shown. Set `false` to use the SDK's own render pipeline (overlays visible, software decode) |
 | `streamType` | `0` = main stream, `1` = sub stream |
 | `channels` | List of channel numbers to display (NVR IP channels start at 33) |
 
@@ -90,24 +94,32 @@ sudo nano /etc/systemd/system/qtliveview.service
 ```ini
 [Unit]
 Description=QtLiveView auto-start
-After=network.target
+After=graphical.target
 
 [Service]
-Type=oneshot
+Type=simple
 User=your_username
 Environment=DISPLAY=:0
 Environment=XAUTHORITY=/home/your_username/.Xauthority
+Environment=XDG_RUNTIME_DIR=/run/user/1000
 ExecStartPre=/bin/sleep 20
-ExecStart=/usr/bin/caffeinate /home/your_username/Downloads/QtLiveView/run.sh
+ExecStart=/usr/bin/caffeinate /bin/bash /home/your_username/Downloads/QtLiveView/run.sh
+Restart=on-failure
+RestartSec=5
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=graphical.target
 ```
 
-Replace `your_username` with your actual Linux username and update the path to `run.sh` if needed.
+Replace `your_username` with your actual Linux username, `1000` in `XDG_RUNTIME_DIR` with your user's id (`id -u your_username`), and update the path to `run.sh` if needed.
 
+- `After=graphical.target` / `WantedBy=graphical.target` — the hardware decode path (`hwDecode: true`) creates an OpenGL context, so the service must start after the display session is up, not just the network.
+- `XDG_RUNTIME_DIR` is required by Qt when launched outside a login session.
 - `ExecStartPre=/bin/sleep 20` gives the display manager a moment to settle before the app launches.
+- `Restart=on-failure` relaunches the viewer if it exits with an error (e.g. the GL context wasn't ready yet).
 - `caffeinate` keeps the session awake (no screen sleep or screensaver) for the lifetime of the process.
+- `run.sh` is invoked through `/bin/bash` so the service works even if the script lost its execute bit (common after copying or unzipping — otherwise the service fails with `Permission denied`; fixable alternatively with `chmod +x run.sh`).
+- For hardware decode, `your_username` must also be in the `video`/`render` groups — see [Running the Qt Demo](#running-the-qt-demo).
 
 **3. Enable and start:**
 
@@ -171,8 +183,23 @@ sudo crontab -l
 Copy the entire `build/qt/` folder to your target machine and install the runtime dependencies:
 
 ```bash
+# Qt runtime
 sudo apt install libqt5widgets5 libqt5opengl5 libsdl2-2.0-0 libopenal1
+
+# hwDecode: FFmpeg + Intel VAAPI driver (N5105/Jasper Lake and newer use iHD)
+sudo apt install ffmpeg intel-media-va-driver vainfo
+
+# verify: should list the iHD driver with H264/HEVC decode profiles
+vainfo
 ```
+
+For hardware decode (`hwDecode: true`) the user running the app must be in the `video`/`render` groups to access `/dev/dri/renderD128`:
+
+```bash
+sudo usermod -aG video,render $USER   # then log out and back in
+```
+
+If VAAPI is missing the app still runs — it falls back to FFmpeg software decode with bounded (non-accumulating) latency.
 
 Run from inside `build/qt/`:
 

@@ -23,9 +23,8 @@ Edit `config/DeviceConfig.json` next to the binary before running.
 {
   "monitorIndex": 0,
   "gridSize": 2,
-  "renderRaw": false,
   "hideVcaOverlay": false,
-  "optimizeRender": false,
+  "hwDecode": true,
   "devices": [
     {
       "ip": "192.168.1.100",
@@ -45,9 +44,8 @@ Edit `config/DeviceConfig.json` next to the binary before running.
 |---|---|---|
 | `monitorIndex` | int | Monitor index to display on (0 = primary) |
 | `gridSize` | int | Grid size — `2` = 2×2, `3` = 3×3, `4` = 4×4 |
-| `renderRaw` | bool | Bypass HCPreview pipeline: raw callback → PlayCtrl decode (no overlays, phone unaffected) |
-| `hideVcaOverlay` | bool | Fallback: disable motion display on the device via `NET_DVR_SetDVRConfig` (persistent, affects all clients) |
-| `optimizeRender` | bool | Enable PlayCtrl rendering quality improvements (requires `renderRaw: true`) |
+| `hideVcaOverlay` | bool | Disable motion display on the device via `NET_DVR_SetDVRConfig` (persistent, affects all clients) |
+| `hwDecode` | bool | Decode with FFmpeg + VAAPI (Intel GPU) instead of the SDK's software decoder. **Default: `true`** — set `false` to fall back to the SDK render pipeline |
 
 ### Device fields
 
@@ -71,43 +69,35 @@ Add more objects to the `devices` array. Channels fill the grid left-to-right, t
 ]
 ```
 
-## renderRaw
+## hwDecode
 
-When `true`, each stream bypasses the Hikvision HCPreview rendering pipeline entirely. Instead of passing `hPlayWnd` to the SDK, the app receives the raw encoded stream via a data callback and feeds it directly into PlayCtrl (`libPlayCtrl.so`) for decode and display.
+Hikvision's Linux `libPlayCtrl.so` decodes in **software only** (the Windows build uses DXVA hardware decode). On low-power CPUs (e.g. Intel N5105) a full-HD stream can decode slower than real time, so the SDK buffers frames and the live-view delay grows without bound.
 
-**Result:** no smart overlays (motion grid, tracking boxes, event markers) are visible on screen. The phone app, Hik-Connect, and any other client are completely unaffected because this is a client-side change only.
+This mode is the **default** (`true`, also used when the key is absent from the config). When enabled, the app keeps HCNetSDK as transport (login, streaming, and reconnect over the single SDK port — works through an NVR with only port 8000 forwarded) but takes Hikvision's decoder out of the loop:
 
-**How it works:**
-1. `NET_DVR_RealPlay_V40` is called with `hPlayWnd = NULL` and `rawDataCallback` as the data callback.
-2. On the first `NET_DVR_SYSHEAD` packet, the callback calls `PlayM4_OpenStream` and `PlayM4_Play` to start the PlayCtrl decoder on the frame's window.
-3. Subsequent `NET_DVR_STREAMDATA` packets are fed via `PlayM4_InputData` — PlayCtrl decodes and renders them directly with no overlay pipeline.
+1. `NET_DVR_RealPlay_V40` runs with a raw data callback instead of `hPlayWnd`.
+2. The MPEG-PS stream is demuxed and decoded by FFmpeg using **VAAPI** hardware acceleration on the Intel GPU (`/dev/dri/renderD128`). If VAAPI is unavailable, it falls back to FFmpeg software decode automatically.
+3. Decoded frames are rendered by an OpenGL widget (YUV→RGB done in a shader on the GPU).
 
-**Trade-offs vs default mode:**
-- No overlays of any kind — both smart detection boxes and device-side OSD are stripped.
-- PlayCtrl renders without the hardware-accelerated display path that HCPreview uses; performance is comparable but may differ on low-end hardware.
-- The device configuration is not touched — no persistent changes are made.
+Latency is bounded by design: only the newest decoded frame is displayed, and if decode ever falls behind, the input backlog is dropped and the decoder resumes at the next keyframe — a brief glitch instead of ever-growing delay.
 
-**Fallback behaviour:** if PlayCtrl setup fails for a stream (e.g. `PlayM4_GetPort` or `PlayM4_OpenStream` returns an error), that stream falls back to normal HCPreview rendering. If `hideVcaOverlay` is also `true`, the device-side config is applied for that stream before falling back, suppressing the overlay at the source.
+**Requirements on the target machine:**
 
-## optimizeRender
+```bash
+sudo apt install libavcodec59 libavformat59 libavutil57   # or simply: sudo apt install ffmpeg
+sudo apt install intel-media-va-driver vainfo             # Intel Gen11+ iGPU (N5105 = Jasper Lake)
+vainfo   # should list the iHD driver with H264/HEVC decode profiles
+```
 
-Requires `renderRaw: true`. When `true`, enables a set of PlayCtrl rendering quality improvements targeted at the jagged/blocky appearance that Linux produces compared to the Windows SDK build.
+The user running the app must have access to `/dev/dri/renderD128` (member of the `render` or `video` group).
 
-**What it enables:**
+Since the SDK render pipeline is bypassed, no SDK overlays (motion grid, tracking boxes, event markers) are shown in this mode. The device configuration is not touched, and other clients (phone app, iVMS) are unaffected.
 
-- `PlayM4_SetPicQuality` — switches the scaler to high-quality mode (bilinear/bicubic interpolation instead of nearest-neighbour). This is the primary fix for jagged edges when the decoded frame is stretched to fill the widget.
-- `PlayM4_SetDeflash` — reduces tearing caused by double-buffer timing mismatches.
-- `PlayM4_ThrowBFrameNum(0)` — decodes all B-frames rather than dropping them, ensuring full temporal resolution.
-- **VIE deblock** (level 30/100) — PlayCtrl's built-in post-processing filter that smooths the visible square block artifacts produced by H.264/H.265 at lower bitrates.
-- **VIE denoise** (level 20/255) — light noise reduction pass. Intentionally mild so fine detail is preserved; increase the value in code if the camera feed is very noisy.
-
-**Trade-offs:**
-- Adds a small amount of CPU overhead per stream for the VIE pass.
-- Denoise and deblock are post-decode filters — they do not affect recordings or other clients.
+> **Note:** `hwDecode` replaces the former `renderRaw` and `optimizeRender` flags, which have been removed. Those modes routed raw stream data into Hikvision's PlayCtrl decoder — software-only on Linux, so full-HD decode could fall behind real time and live-view delay accumulated without bound.
 
 ## hideVcaOverlay
 
-Fallback mode for when `renderRaw` is unavailable or fails. When `true`, the app reads the full channel picture config from the device via `NET_DVR_GetDVRConfig` (`NET_DVR_PICCFG_V40`, falling back to `NET_DVR_PICCFG_V30`), sets `struMotion.byEnableDisplay = 0`, and writes it back with `NET_DVR_SetDVRConfig`.
+Hides overlays at the source when using the default SDK render mode. When `true`, the app reads the full channel picture config from the device via `NET_DVR_GetDVRConfig` (`NET_DVR_PICCFG_V40`, falling back to `NET_DVR_PICCFG_V30`), sets `struMotion.byEnableDisplay = 0`, and writes it back with `NET_DVR_SetDVRConfig`.
 
 **Important notes:**
 - This is a **persistent device setting** — it remains in effect until changed back, even after the app closes.

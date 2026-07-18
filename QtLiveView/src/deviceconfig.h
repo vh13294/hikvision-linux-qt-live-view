@@ -18,9 +18,8 @@ struct DeviceEntry {
 struct AppConfig {
     int monitorIndex;  // which monitor index to use
     int gridSize;      // grid dimension: 1=1x1, 2=2x2, 3=3x3, 4=4x4
-    bool renderRaw;        // bypass HCPreview pipeline: raw callback → PlayCtrl (no overlays, phone unaffected)
-    bool hideVcaOverlay;   // fallback: disable motion display on device via NET_DVR_SetDVRConfig (persistent, affects all clients)
-    bool optimizeRender;   // enable PlayCtrl quality settings: high-quality scaling, deflash, B-frame decode, VIE deblock+denoise
+    bool hideVcaOverlay;   // disable motion display on device via NET_DVR_SetDVRConfig (persistent, affects all clients)
+    bool hwDecode;         // decode with FFmpeg + VAAPI (Intel GPU) instead of the SDK's software decoder
     QList<DeviceEntry> devices;
     bool valid;
 };
@@ -30,9 +29,8 @@ inline AppConfig loadConfig(const QString &path)
     AppConfig cfg{};
     cfg.monitorIndex = 0;
     cfg.gridSize     = 1;
-    cfg.renderRaw       = false;
     cfg.hideVcaOverlay  = false;
-    cfg.optimizeRender  = false;
+    cfg.hwDecode        = true;
     cfg.valid          = false;
 
     QFile file(path);
@@ -47,9 +45,8 @@ inline AppConfig loadConfig(const QString &path)
     QJsonObject root = doc.object();
     cfg.monitorIndex = root["monitorIndex"].toInt(0);
     cfg.gridSize     = root["gridSize"].toInt(1);
-    cfg.renderRaw      = root["renderRaw"].toBool(false);
     cfg.hideVcaOverlay = root["hideVcaOverlay"].toBool(false);
-    cfg.optimizeRender = root["optimizeRender"].toBool(false);
+    cfg.hwDecode       = root["hwDecode"].toBool(true);
 
     for (const QJsonValue &dv : root["devices"].toArray()) {
         QJsonObject d = dv.toObject();
