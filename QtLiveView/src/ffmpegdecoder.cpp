@@ -151,8 +151,11 @@ void FfmpegDecoder::run()
     int videoIdx = -1;
 
     // Hikvision delivers MPEG-PS over the SDK tunnel.
+    // const_cast: FFmpeg < 5.0 (e.g. Ubuntu 22.04's 4.4) declares the fmt
+    // parameter of avformat_open_input() as non-const.
     const AVInputFormat *psFormat = av_find_input_format("mpeg");
-    if (avformat_open_input(&fmt, nullptr, psFormat, nullptr) < 0) {
+    if (avformat_open_input(&fmt, nullptr,
+                            const_cast<AVInputFormat *>(psFormat), nullptr) < 0) {
         if (!m_stop.load()) {
             qWarning() << "FfmpegDecoder: failed to open stream";
             emit decodeError("Decode Error: bad stream");
