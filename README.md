@@ -79,13 +79,32 @@ The script auto-detects whether to use software rendering: on a VM or a machine 
 
 After a fresh Debian 12 LXQt install you can run the Ansible playbook (if available) to automate all of the steps below — systemd service setup, caffeine install, and cron configuration. Otherwise, follow the manual steps.
 
-**1. Install caffeine** — prevents screen sleep and screensaver from interrupting the live view:
+The service below attaches to `DISPLAY=:0` of an already-running graphical session — it does not open one itself. Without auto-login, the box stops at the login screen after boot/reboot and the service fails (no display to attach to), so skip the login screen first.
+
+**1. Skip the login screen (auto-login)** — for SDDM, add a drop-in config rather than editing `/etc/sddm.conf` directly (packages can overwrite it):
+
+```bash
+sudo mkdir -p /etc/sddm.conf.d
+sudo nano /etc/sddm.conf.d/autologin.conf
+```
+
+```ini
+[Autologin]
+User=your_username
+Session=lxqt.desktop
+```
+
+Check the exact session filename first with `ls /usr/share/xsessions/` — use whatever matches there for `Session=`.
+
+Reboot to confirm it boots straight to the desktop with no login prompt.
+
+**2. Install caffeine** — prevents screen sleep and screensaver from interrupting the live view:
 
 ```bash
 sudo apt update && sudo apt install caffeine -y
 ```
 
-**2. Create the service file:**
+**3. Create the service file:**
 
 ```bash
 sudo nano /etc/systemd/system/qtliveview.service
@@ -121,7 +140,7 @@ Replace `your_username` with your actual Linux username, `1000` in `XDG_RUNTIME_
 - `run.sh` is invoked through `/bin/bash` so the service works even if the script lost its execute bit (common after copying or unzipping — otherwise the service fails with `Permission denied`; fixable alternatively with `chmod +x run.sh`).
 - For hardware decode, `your_username` must also be in the `video`/`render` groups — see [Running the Qt Demo](#running-the-qt-demo).
 
-**3. Enable and start:**
+**4. Enable and start:**
 
 ```bash
 sudo systemctl daemon-reload
@@ -129,7 +148,7 @@ sudo systemctl enable qtliveview.service
 sudo systemctl start qtliveview.service
 ```
 
-**4. Check status / logs:**
+**5. Check status / logs:**
 
 ```bash
 sudo systemctl status qtliveview.service
