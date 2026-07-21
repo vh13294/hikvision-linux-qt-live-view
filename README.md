@@ -69,6 +69,30 @@ Edit `build/liveview/config/DeviceConfig.json` before running:
 
 ### Running
 
+Install runtime dependencies on the target machine:
+
+```bash
+# Qt runtime
+sudo apt install libqt5widgets5 libqt5opengl5 libsdl2-2.0-0 libopenal1
+
+# hwDecode: Intel VAAPI driver (N5105/Jasper Lake and newer use iHD).
+# FFmpeg itself is bundled in lib/ inside the release tarball — no need to
+# apt install ffmpeg separately, and no risk of the release binary needing a
+# libavformat SONAME your distro's FFmpeg package doesn't ship.
+sudo apt install intel-media-va-driver vainfo
+
+# verify: should list the iHD driver with H264/HEVC decode profiles
+vainfo
+```
+
+For hardware decode (`hwDecode: true`) the user running the app must be in the `video`/`render` groups to access `/dev/dri/renderD128`:
+
+```bash
+sudo usermod -aG video,render $USER   # then log out and back in
+```
+
+If VAAPI is missing the app still runs — it falls back to FFmpeg software decode with bounded (non-accumulating) latency.
+
 ```bash
 bash build/liveview/run.sh
 ```
@@ -202,23 +226,10 @@ sudo crontab -l
 Copy the entire `build/qt/` folder to your target machine and install the runtime dependencies:
 
 ```bash
-# Qt runtime
 sudo apt install libqt5widgets5 libqt5opengl5 libsdl2-2.0-0 libopenal1
-
-# hwDecode: FFmpeg + Intel VAAPI driver (N5105/Jasper Lake and newer use iHD)
-sudo apt install ffmpeg intel-media-va-driver vainfo
-
-# verify: should list the iHD driver with H264/HEVC decode profiles
-vainfo
 ```
 
-For hardware decode (`hwDecode: true`) the user running the app must be in the `video`/`render` groups to access `/dev/dri/renderD128`:
-
-```bash
-sudo usermod -aG video,render $USER   # then log out and back in
-```
-
-If VAAPI is missing the app still runs — it falls back to FFmpeg software decode with bounded (non-accumulating) latency.
+This demo renders through the SDK's own PlayCtrl/SuperRender pipeline, not FFmpeg — there's no `hwDecode` option or VAAPI dependency here (that's specific to [QtLiveView](#qtliveview--auto-start-live-view)).
 
 Run from inside `build/qt/`:
 
@@ -241,3 +252,10 @@ The generated `run.sh` sets `LD_LIBRARY_PATH` relative to its own location, so t
 | cJSON | — | MIT |
 
 Full license texts: [doc/Open Source Software Licenses-HCNetSDK.txt](doc/Open%20Source%20Software%20Licenses-HCNetSDK.txt)
+
+The `QtLiveView-linux64.tar.gz` release additionally bundles Ubuntu 22.04's FFmpeg runtime (`libavformat`/`libavcodec`/`libavutil`) and its own codec/container dependencies in `lib/`, so the release doesn't depend on the target distro's FFmpeg SONAME. This pulls in GPL-licensed codec libraries (notably `libx264`, and possibly `libx265`/`libxvidcore` depending on the runner's package set) — check the exact set with `ldd lib/libavcodec.so.*` on a given release. Corresponding source for these is the unmodified upstream project source, available at:
+- FFmpeg (LGPL 2.1+/GPL 2+ depending on build config): https://ffmpeg.org/
+- x264 (GPL 2+): https://code.videolan.org/videolan/x264
+- x265 (GPL 2+): https://bitbucket.org/multicoreware/x265_git
+
+All are built unmodified from Ubuntu 22.04's official archive packages — see `apt-get source <package>` for the exact revision matching a given release.

@@ -31,6 +31,39 @@ jobs:
       - name: Build Qt Live View
         run: bash build-demos.sh liveview
 
+      - name: Bundle FFmpeg runtime libs
+        run: |
+          cd build/liveview
+          # QtLiveView links against this runner's FFmpeg (Ubuntu 22.04 = FFmpeg
+          # 4.4 / libavformat.so.58). The recommended target OS, Debian 12,
+          # ships FFmpeg 5.1 / libavformat.so.59 — that SONAME doesn't exist
+          # there, so the binary fails with "error while loading shared
+          # libraries: libavformat.so.58: cannot open shared object file".
+          # Bundle FFmpeg's own libs (+ their codec/container deps) into lib/
+          # so run.sh's LD_LIBRARY_PATH picks these up instead of relying on
+          # whatever FFmpeg the host distro happens to have.
+          #
+          # Deliberately NOT bundled — these must come from the host, not the
+          # CI runner, since they're tied to the actual GPU/driver/toolchain:
+          #   glibc/libstdc++/toolchain basics, and the VAAPI/graphics stack
+          #   (libva*, libdrm*, libGL*, libEGL*, libX11*, libxcb*, libwayland*).
+          exclude_re='^(linux-vdso|ld-linux|libc\.|libm\.|libdl\.|libpthread\.|librt\.|libgcc_s|libstdc\+\+|libva|libdrm|libGL|libEGL|libX|libxcb|libwayland)'
+
+          ldd QtLiveView | awk '{print $1, $3}' | while read -r name path; do
+              [ -z "$path" ] && continue
+              [[ "$name" =~ ^lib(av|sw) ]] || continue
+              cp -Lv "$path" lib/
+          done
+          for so in lib/libav*.so* lib/libsw*.so*; do
+              [ -e "$so" ] || continue
+              ldd "$so" | awk '{print $1, $3}' | while read -r name path; do
+                  [ -z "$path" ] && continue
+                  [ -e "lib/$name" ] && continue
+                  [[ "$name" =~ $exclude_re ]] && continue
+                  cp -Lv "$path" lib/ 2>/dev/null || true
+              done
+          done
+
       - name: Package Qt Live View
         run: |
           cd build/liveview
