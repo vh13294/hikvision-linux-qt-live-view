@@ -9,14 +9,6 @@ Build date: **2022-04-12** | Architecture: **linux-x86_64**
 
 **Recommended: Debian 12 (Bookworm) with LXQt**
 
-Install runtime dependencies:
-```bash
-sudo apt install \
-    libqt5widgets5 libqt5opengl5 \
-    libsdl2-2.0-0 \
-    libopenal1
-```
-
 ---
 
 ## Releases
